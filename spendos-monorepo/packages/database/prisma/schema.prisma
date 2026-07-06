@@ -1,0 +1,596 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ------------------------------------------------------
+// IDENTITY & MULTI-TENANCY
+// ------------------------------------------------------
+
+model Company {
+  id                      String   @id @default(uuid()) @db.Uuid
+  name                    String   @db.VarChar(255)
+  email_domain            String   @unique @db.VarChar(255)
+  gstin                   String?  @db.VarChar(15)
+  sla_days                Int      @default(14)
+  session_timeout_minutes Int      @default(30)
+  is_active               Boolean  @default(true)
+  created_at              DateTime @default(now()) @db.Timestamptz
+  updated_at              DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  users             User[]
+  accounts          Account[]
+  expenses          Expense[]
+  expense_documents ExpenseDocument[]
+  tickets           Ticket[]
+  notifications     Notification[]
+  audit_logs        AuditLog[]
+  invite_tokens     InviteToken[]
+  spend_policy      SpendPolicy?
+
+  cost_centers     CostCenter[]
+  payment_runs     PaymentRun[]
+  policy_snapshots PolicySnapshot[]
+
+  @@map("companies")
+}
+
+enum UserRole {
+  PRINCIPAL
+  ADMIN
+  VIP
+  MANAGER
+  EMPLOYEE
+}
+
+model User {
+  id                        String    @id @default(uuid()) @db.Uuid
+  company_id                String    @db.Uuid
+  full_name                 String    @db.VarChar(255)
+  email                     String    @unique @db.VarChar(255)
+  password_hash             String    @db.VarChar(255)
+  role                      UserRole
+  approval_scope            Json?
+  auto_approval_limit_paise BigInt?
+  is_active                 Boolean   @default(true)
+  is_frozen                 Boolean   @default(false)
+  frozen_reason             String?   @db.Text
+  frozen_by                 String?   @db.Uuid
+  invited_by                String?   @db.Uuid
+  last_login_at             DateTime? @db.Timestamptz
+  password_reset_token      String?   @db.VarChar(255)
+  password_reset_expires_at DateTime? @db.Timestamptz
+  mfa_enabled               Boolean   @default(false)
+  mfa_secret                String?   @db.VarChar(255)
+  recovery_codes            String[]
+  // Bumped on password change/reset to revoke all previously issued JWTs
+  // (access + refresh). Tokens carry the version; a mismatch is rejected.
+  token_version             Int       @default(0)
+  created_at                DateTime  @default(now()) @db.Timestamptz
+  updated_at                DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id])
+
+  frozen_by_user User?  @relation("UserFrozenBy", fields: [frozen_by], references: [id])
+  frozen_users   User[] @relation("UserFrozenBy")
+
+  invited_by_user User?  @relation("UserInvitedBy", fields: [invited_by], references: [id])
+  invited_users   User[] @relation("UserInvitedBy")
+
+  wallets            Wallet[]
+  expenses_submitted Expense[] @relation("ExpenseSubmitter")
+  expenses_reviewed  Expense[] @relation("ExpenseReviewer")
+  expenses_paid      Expense[] @relation("ExpensePayer")
+
+  documents_uploaded ExpenseDocument[] @relation("DocumentUploader")
+
+  approvals          ExpenseApproval[]
+  payment_runs       PaymentRun[]
+  policy_snapshots   PolicySnapshot[]
+  cost_centers_managed CostCenter[] @relation("CostCenterManager")
+
+  tickets_raised   Ticket[] @relation("TicketRaiser")
+  tickets_resolved Ticket[] @relation("TicketResolver")
+
+  notifications      Notification[]
+  audit_logs         AuditLog[]
+  invite_tokens_sent InviteToken[]
+
+  @@index([company_id, role, is_active, is_frozen])
+  @@index([email])
+  @@index([role])
+  @@index([is_active])
+  @@index([is_frozen])
+  @@index([password_reset_token])
+  @@map("users")
+}
+
+// ------------------------------------------------------
+// LEDGER CORE (Source of Truth)
+// ------------------------------------------------------
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum NormalBalance {
+  DEBIT
+  CREDIT
+}
+
+model Account {
+  id             String        @id @default(uuid()) @db.Uuid
+  company_id     String        @db.Uuid
+  company        Company       @relation(fields: [company_id], references: [id])
+  name           String
+  account_type   AccountType
+  normal_balance NormalBalance
+  created_at     DateTime      @default(now()) @db.Timestamptz
+
+  journal_entries     JournalEntry[]
+  wallets             Wallet[]
+  expense_allocations ExpenseAllocation[]
+
+  @@unique([company_id, name])
+  @@index([company_id])
+}
+
+model Wallet {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  user       User     @relation(fields: [user_id], references: [id])
+  account_id String   @db.Uuid
+  account    Account  @relation(fields: [account_id], references: [id])
+  name       String
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  @@unique([user_id, account_id])
+  @@index([user_id])
+  @@index([account_id])
+}
+
+enum TransactionType {
+  SYSTEM_BOOTSTRAP
+  WALLET_ALLOCATION
+  MERCHANT_SPEND
+  EXPENSE_REIMBURSEMENT
+}
+
+model JournalGroup {
+  id               String          @id @default(uuid()) @db.Uuid
+  transaction_type TransactionType
+  transaction_id   String?         @db.Uuid
+  actor_id         String?         @db.Uuid
+  company_id       String?         @db.Uuid
+  description      String
+  created_at       DateTime        @default(now()) @db.Timestamptz
+
+  entries JournalEntry[]
+
+  @@unique([transaction_type, transaction_id])
+}
+
+enum EntryType {
+  DEBIT
+  CREDIT
+}
+
+model JournalEntry {
+  id               String       @id @default(uuid()) @db.Uuid
+  journal_group_id String       @db.Uuid
+  journal_group    JournalGroup @relation(fields: [journal_group_id], references: [id])
+  account_id       String       @db.Uuid
+  account          Account      @relation(fields: [account_id], references: [id])
+
+  sequence_number BigInt    @default(autoincrement())
+  entry_type      EntryType
+  amount_paise    BigInt
+  running_balance BigInt
+  currency        String    @default("INR")
+  created_at      DateTime  @default(now()) @db.Timestamptz
+
+  @@index([account_id, sequence_number(sort: Desc)])
+  @@index([journal_group_id])
+}
+
+// ------------------------------------------------------
+// DISTRIBUTED SYSTEM RECOVERY & IDEMPOTENCY
+// ------------------------------------------------------
+
+model OutboxEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  aggregate_type String
+  aggregate_id   String   @db.Uuid
+  event_type     String
+  payload        Json
+  published      Boolean  @default(false)
+  retry_count    Int      @default(0)
+  failed         Boolean  @default(false)
+  created_at     DateTime @default(now()) @db.Timestamptz
+}
+
+model IdempotencyKey {
+  key               String   @id
+  request_hash      String
+  nonce             String?  @unique @db.VarChar(100)
+  response_snapshot Json?
+  created_at        DateTime @default(now()) @db.Timestamptz
+}
+
+// ------------------------------------------------------
+// PILOT READINESS SPRINT (Expenses & Approvals)
+// ------------------------------------------------------
+
+enum WorkflowState {
+  SUBMITTED
+  IN_REVIEW
+  PROOF_REQUESTED
+  APPROVED
+  REJECTED
+}
+
+enum FinancialState {
+  NOT_APPROVED
+  APPROVED
+  PAID
+  BLOCKED
+}
+
+enum DisputeState {
+  NONE
+  OPEN
+  RESOLVED
+}
+
+enum ExpenseStatus {
+  submitted
+  proof_requested
+  proof_submitted
+  approved
+  rejected
+  paid
+  disputed
+}
+
+enum ExpenseCategory {
+  travel
+  food
+  office_supplies
+  software
+  utilities
+  other
+}
+
+model Expense {
+  id                          String          @id @default(uuid()) @db.Uuid
+  company_id                  String          @db.Uuid
+  submitted_by                String          @db.Uuid
+  amount_paise                BigInt
+  expense_date                DateTime        @db.Date
+  category                    ExpenseCategory
+  description                 String?         @db.Text
+  merchant_name               String?         @db.Text
+  gstin                       String?         @db.Text
+  invoice_number              String?         @db.Text
+  tax_amount_paise            BigInt?
+  status                      ExpenseStatus   @default(submitted)
+  workflow_state              WorkflowState   @default(SUBMITTED)
+  financial_state             FinancialState  @default(NOT_APPROVED)
+  dispute_state               DisputeState    @default(NONE)
+  ticket_open                 Boolean         @default(false)
+  reviewed_by                 String?         @db.Uuid
+  reviewed_at                 DateTime?       @db.Timestamptz
+  rejection_reason            String?         @db.Text
+  review_locked_by            String?         @db.Uuid
+  review_locked_at            DateTime?       @db.Timestamptz
+  paid_by                     String?         @db.Uuid
+  paid_at                     DateTime?       @db.Timestamptz
+  payment_note                String?         @db.Text
+  proof_requested_note        String?         @db.Text
+  sla_warning_sent            Boolean         @default(false)
+  was_auto_approved           Boolean         @default(false)
+  allocation_journal_group_id String?         @db.Uuid
+  created_at                  DateTime        @default(now()) @db.Timestamptz
+  updated_at                  DateTime        @default(now()) @updatedAt @db.Timestamptz
+
+  company   Company @relation(fields: [company_id], references: [id])
+  submitter User    @relation("ExpenseSubmitter", fields: [submitted_by], references: [id])
+  reviewer  User?   @relation("ExpenseReviewer", fields: [reviewed_by], references: [id], onDelete: Restrict)
+  payer     User?   @relation("ExpensePayer", fields: [paid_by], references: [id], onDelete: Restrict)
+
+  documents ExpenseDocument[]
+  tickets   Ticket[]
+
+  allocations ExpenseAllocation[]
+  approvals   ExpenseApproval[]
+  payment_run PaymentRunItem?
+
+  @@index([company_id])
+  @@index([submitted_by])
+  @@index([status])
+  @@index([ticket_open])
+  @@index([expense_date])
+  @@index([created_at])
+  @@index([company_id, status])
+  @@index([company_id, created_at])
+  @@map("expenses")
+}
+
+model SpendPolicy {
+  id         String  @id @default(uuid()) @db.Uuid
+  company_id String  @unique @db.Uuid
+  company    Company @relation(fields: [company_id], references: [id])
+
+  auto_approve_threshold BigInt @default(0)
+  receipt_required_above BigInt @default(0)
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  @@map("spend_policies")
+}
+
+enum DocumentType {
+  original
+  proof
+}
+
+model ExpenseDocument {
+  id              String       @id @default(uuid()) @db.Uuid
+  expense_id      String       @db.Uuid
+  company_id      String       @db.Uuid
+  document_type   DocumentType
+  s3_key          String       @db.VarChar(512)
+  file_name       String       @db.VarChar(255)
+  file_type       String       @db.VarChar(50)
+  file_size_bytes Int
+  uploaded_by     String       @db.Uuid
+  uploaded_at     DateTime     @default(now()) @db.Timestamptz
+
+  expense  Expense @relation(fields: [expense_id], references: [id])
+  company  Company @relation(fields: [company_id], references: [id])
+  uploader User    @relation("DocumentUploader", fields: [uploaded_by], references: [id])
+
+  @@index([expense_id])
+  @@index([company_id])
+  @@map("expense_documents")
+}
+
+enum TicketStatus {
+  open
+  resolved
+  extended
+  disputed
+}
+
+enum ResolutionType {
+  marked_paid
+  extended
+  disputed
+}
+
+model Ticket {
+  id                String          @id @default(uuid()) @db.Uuid
+  company_id        String          @db.Uuid
+  expense_id        String          @db.Uuid
+  raised_by         String          @db.Uuid
+  user_note         String?         @db.Text
+  status            TicketStatus    @default(open)
+  resolved_by       String?         @db.Uuid
+  resolution_type   ResolutionType?
+  resolution_note   String?         @db.Text
+  new_deadline_date DateTime?       @db.Date
+  resolved_at       DateTime?       @db.Timestamptz
+  created_at        DateTime        @default(now()) @db.Timestamptz
+
+  company  Company @relation(fields: [company_id], references: [id])
+  expense  Expense @relation(fields: [expense_id], references: [id])
+  raiser   User    @relation("TicketRaiser", fields: [raised_by], references: [id])
+  resolver User?   @relation("TicketResolver", fields: [resolved_by], references: [id], onDelete: Restrict)
+
+  @@index([company_id, status])
+  @@index([expense_id])
+  @@index([raised_by])
+  @@index([resolved_by])
+  @@map("tickets")
+}
+
+model Notification {
+  id             String   @id @default(uuid()) @db.Uuid
+  company_id     String   @db.Uuid
+  user_id        String   @db.Uuid
+  type           String   @db.VarChar(100)
+  message        String   @db.Text
+  reference_id   String?  @db.Uuid
+  reference_type String?  @db.VarChar(50)
+  is_read        Boolean  @default(false)
+  created_at     DateTime @default(now()) @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+
+  @@index([user_id, created_at])
+  @@index([user_id, is_read])
+  @@index([created_at])
+  @@index([company_id])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  event_id       String   @unique @default(uuid()) @db.Uuid
+  correlation_id String?  @db.VarChar(255)
+  company_id     String   @db.Uuid
+  actor_id       String   @db.Uuid
+  action         String   @db.VarChar(100)
+  target_type    String?  @db.VarChar(50)
+  target_id      String?  @db.Uuid
+  metadata       Json?
+  chain_sequence BigInt   @default(autoincrement())
+  previous_hash  String?  @db.VarChar(64)
+  record_hash    String?  @db.VarChar(64)
+  created_at     DateTime @default(now()) @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id])
+  actor   User    @relation(fields: [actor_id], references: [id])
+
+  @@index([company_id, created_at])
+  @@index([target_type, target_id])
+  @@index([correlation_id])
+  @@map("audit_log")
+}
+
+model InviteToken {
+  id         String   @id @default(uuid()) @db.Uuid
+  company_id String   @db.Uuid
+  invited_by String   @db.Uuid
+  email      String   @db.VarChar(255)
+  role       UserRole
+  token_hash String   @unique @db.VarChar(255)
+  is_used    Boolean  @default(false)
+  expires_at DateTime @db.Timestamptz
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id])
+  inviter User    @relation(fields: [invited_by], references: [id])
+
+  @@index([company_id])
+  @@index([invited_by])
+  @@map("invite_tokens")
+}
+
+// ------------------------------------------------------
+// ENTERPRISE COST CENTERS & ALLOCATIONS
+// ------------------------------------------------------
+model CostCenter {
+  id         String   @id @default(uuid()) @db.Uuid
+  company_id String   @db.Uuid
+  name       String   @db.VarChar(255)
+  code       String   @unique @db.VarChar(50)
+  manager_id String?  @db.Uuid
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company     Company           @relation(fields: [company_id], references: [id])
+  manager     User?             @relation("CostCenterManager", fields: [manager_id], references: [id])
+  allocations ExpenseAllocation[]
+
+  @@index([company_id])
+  @@map("cost_centers")
+}
+
+model ExpenseAllocation {
+  id             String   @id @default(uuid()) @db.Uuid
+  expense_id     String   @db.Uuid
+  account_id     String   @db.Uuid
+  cost_center_id String?  @db.Uuid
+  amount_paise   BigInt
+  percentage     Decimal? @db.Decimal(5, 2)
+  description    String?  @db.Text
+
+  expense     Expense     @relation(fields: [expense_id], references: [id], onDelete: Cascade)
+  account     Account     @relation(fields: [account_id], references: [id])
+  cost_center CostCenter? @relation(fields: [cost_center_id], references: [id])
+
+  @@index([expense_id])
+  @@index([cost_center_id])
+  @@map("expense_allocations")
+}
+
+enum ApprovalAction {
+  APPROVED
+  REJECTED
+  PROOF_REQUESTED
+  ESCALATED
+}
+
+model ExpenseApproval {
+  id          String         @id @default(uuid()) @db.Uuid
+  expense_id  String         @db.Uuid
+  approver_id String         @db.Uuid
+  action      ApprovalAction
+  comment     String?        @db.Text
+  level       Int            @default(1)
+  acted_at    DateTime       @default(now()) @db.Timestamptz
+
+  expense  Expense @relation(fields: [expense_id], references: [id], onDelete: Cascade)
+  approver User    @relation(fields: [approver_id], references: [id])
+
+  @@index([expense_id])
+  @@index([approver_id])
+  @@map("expense_approvals")
+}
+
+// ------------------------------------------------------
+// PAYMENT BATCHING
+// ------------------------------------------------------
+enum PaymentRunStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PENDING_BANK_PROCESSING
+  EXECUTED
+  SETTLED
+  FAILED
+}
+
+model PaymentRun {
+  id           String           @id @default(uuid()) @db.Uuid
+  company_id   String           @db.Uuid
+  status       PaymentRunStatus @default(DRAFT)
+  initiated_by String           @db.Uuid
+  approved_by  String?          @db.Uuid
+  approved_at  DateTime?        @db.Timestamptz
+  total_paise  BigInt           @default(0)
+  bank_ref_id  String?          @db.VarChar(255)
+  created_at   DateTime         @default(now()) @db.Timestamptz
+  completed_at DateTime?        @db.Timestamptz
+
+  company   Company          @relation(fields: [company_id], references: [id])
+  initiator User             @relation(fields: [initiated_by], references: [id])
+  items     PaymentRunItem[]
+
+  @@index([company_id])
+  @@map("payment_runs")
+}
+
+model PaymentRunItem {
+  id             String @id @default(uuid()) @db.Uuid
+  payment_run_id String @db.Uuid
+  expense_id     String @unique @db.Uuid
+  amount_paise   BigInt
+  status         String @default("PENDING")
+
+  payment_run PaymentRun @relation(fields: [payment_run_id], references: [id], onDelete: Cascade)
+  expense     Expense    @relation(fields: [expense_id], references: [id])
+
+  @@map("payment_run_items")
+}
+
+// ------------------------------------------------------
+// POLICY AUDIT
+// ------------------------------------------------------
+model PolicySnapshot {
+  id         String   @id @default(uuid()) @db.Uuid
+  company_id String   @db.Uuid
+  user_id    String   @db.Uuid
+  scope_json Json
+  version    Int
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+
+  @@index([company_id])
+  @@map("policy_snapshots")
+}

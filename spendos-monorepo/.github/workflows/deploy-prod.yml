@@ -1,0 +1,72 @@
+name: Deploy Production
+
+on:
+  release:
+    types: [published]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: spendos-api
+  ENVIRONMENT: prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        working-directory: spendos-monorepo
+        run: |
+          # Build API
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-api:$IMAGE_TAG -f apps/api/Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY-api:$IMAGE_TAG
+          
+          # Build Dashboard
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-dashboard:$IMAGE_TAG -f apps/dashboard/Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY-dashboard:$IMAGE_TAG
+          
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: spendos-monorepo/infrastructure/terraform
+        run: terraform init -backend-config="key=${{ env.ENVIRONMENT }}/terraform.tfstate"
+
+      - name: Terraform Apply
+        working-directory: spendos-monorepo/infrastructure/terraform
+        run: terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="api_image_tag=${{ steps.build-image.outputs.image_tag }}" -var="dashboard_image_tag=${{ steps.build-image.outputs.image_tag }}" -auto-approve
+
+      - name: Run Database Migrations
+        run: |
+          CLUSTER_NAME=$(aws ecs list-clusters --query 'clusterArns[?contains(@, `spendos-prod`)]' --output text)
+          TASK_DEF=$(aws ecs list-task-definitions --family-prefix spendos-prod-api --sort DESC --query 'taskDefinitionArns[0]' --output text)
+          SUBNETS=$(aws ec2 describe-subnets --filters "Name=tag:Environment,Values=prod" --query 'Subnets[*].SubnetId' --output text | tr '\t' ',')
+          SG=$(aws ec2 describe-security-groups --filters "Name=tag:Environment,Values=prod" "Name=group-name,Values=*api*" --query 'SecurityGroups[0].GroupId' --output text)
+          
+          aws ecs run-task \
+            --cluster $CLUSTER_NAME \
+            --task-definition $TASK_DEF \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${SUBNETS}],securityGroups=[${SG}],assignPublicIp=ENABLED}" \
+            --overrides '{"containerOverrides": [{"name": "api", "command": ["npx", "prisma", "migrate", "deploy"]}]}'

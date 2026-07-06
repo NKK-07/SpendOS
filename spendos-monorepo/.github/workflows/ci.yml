@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret Scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: spendos-monorepo/package-lock.json
+
+      - name: Cache Turborepo
+        uses: actions/cache@v4
+        with:
+          path: spendos-monorepo/.turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Install dependencies
+        working-directory: spendos-monorepo
+        run: npm ci
+
+      - name: Lint
+        working-directory: spendos-monorepo
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: spendos-monorepo
+        run: npm run typecheck
+
+      - name: Build
+        working-directory: spendos-monorepo
+        run: npm run build
+
+      - name: Start Services
+        working-directory: spendos-monorepo
+        run: docker-compose up -d
+
+      - name: Setup Database
+        working-directory: spendos-monorepo
+        run: |
+          npm run db:push -w @spendos/database
+          npx prisma migrate status --schema=packages/database/prisma/schema.prisma
+
+      - name: Run Tests
+        working-directory: spendos-monorepo
+        run: npm run test

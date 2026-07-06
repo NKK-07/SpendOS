@@ -1,0 +1,17 @@
+{
+  "name": "@spendos/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "xss": "^1.0.15",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

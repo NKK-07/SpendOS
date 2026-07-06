@@ -1,0 +1,333 @@
+@import "tailwindcss";
+
+/* ─── Dark mode = default, `.light` on <html> opts out ──────────────────────
+   Tailwind v4's `dark:` variant defaults to `@media (prefers-color-scheme: dark)`,
+   which follows the OS and IGNORES our theme toggle (the toggle sets a `.light`
+   class on <html>, and the CSS-var tokens key off that class). That split meant
+   half the app (components using `dark:` variants) followed the OS while the
+   other half (token-based) followed the toggle — dark chrome with light text.
+   Re-point `dark:` at the SAME signal the tokens use: it is active whenever the
+   root is NOT `.light`, so a single `.light` class now drives BOTH mechanisms. */
+@custom-variant dark (&:where(:root:not(.light), :root:not(.light) *));
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPENDOS — ENTERPRISE FINANCIAL SYSTEM
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─── Core Palette (Dark Mode Default) ─── */
+  --background:        #050505;
+  --background-soft:   #0a0a0f;
+  --surface:           #121212;
+  --surface-raised:    #181818;
+  --surface-elevated:  #1e1e1e;
+
+  /* ─── Brand Signals ─── */
+  --indigo:            #4f46e5;
+  --indigo-dim:        rgba(79, 70, 229, 0.15);
+  --indigo-bright:     #6366f1;
+  --signal:            #10b981;
+  --signal-dim:        rgba(16, 185, 129, 0.15);
+  --signal-bright:     #34d399;
+  --amber:             #f59e0b;
+  --amber-dim:         rgba(245, 158, 11, 0.15);
+  --danger:            #ef4444;
+  --danger-dim:        rgba(239, 68, 68, 0.15);
+  --info:              #3b82f6;
+
+  /* ─── Borders ─── */
+  --border-subtle:     rgba(255, 255, 255, 0.08);
+  --border-muted:      rgba(255, 255, 255, 0.15);
+  --border-strong:     rgba(255, 255, 255, 0.25);
+  --border-indigo:     rgba(99, 102, 241, 0.4);
+  --border-signal:     rgba(16, 185, 129, 0.4);
+
+  /* ─── Typography ─── */
+  --foreground:        #f9fafb;
+  --text-primary:      #f9fafb;
+  --text-secondary:    #d1d5db;
+  --text-muted:        #9ca3af;
+  --text-indigo:       #818cf8;
+  --text-signal:       #34d399;
+
+  /* ─── Role Accent Colors ─── */
+  --role-black-card:   #f59e0b;
+  --role-admin:        #8b5cf6;
+  --role-manager:      #6366f1;
+  --role-employee:     #10b981;
+
+  /* ─── Layout & Z-Index ─── */
+  --sidebar-collapsed: 64px;
+  --sidebar-expanded:  240px;
+  --z-sidebar:    40;
+  --z-topnav:     30;
+  --z-drawer:     50;
+  --z-modal:      60;
+  --z-toast:      70;
+
+  /* Spring parameters for framer-motion */
+  --spring-stiffness:  300;
+  --spring-damping:    30;
+  --ease-titan:        cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Light Mode ───────────────────────────────────────────────────────────
+   Light mode is driven ONLY by the `.light` class on <html>, which the theme
+   toggle (TopNav) sets/clears and persists to localStorage; on first load the
+   toggle also seeds `.light` from the OS `prefers-color-scheme` preference.
+   We intentionally do NOT use an `@media (prefers-color-scheme: light)` block:
+   that made OS preference override the user's explicit choice (a light-OS user
+   who toggled to dark still got forced light), and it only flipped the text
+   tokens while the chrome stayed dark — producing dark-on-dark. The `.light`
+   class is now the single source of truth for the theme. */
+.light {
+  --background:        #f3f4f6;
+  --background-soft:   #f9fafb;
+  --surface:           #ffffff;
+  --surface-raised:    #ffffff;
+  --surface-elevated:  #ffffff;
+
+  --border-subtle:     #e5e7eb;
+  --border-muted:      #d1d5db;
+  --border-strong:     #9ca3af;
+  --border-indigo:     #c7d2fe;
+  --border-signal:     #a7f3d0;
+
+  --foreground:        #111827;
+  --text-primary:      #111827;
+  --text-secondary:    #374151;
+  --text-muted:        #6b7280;
+  --text-indigo:       #4338ca;
+  --text-signal:       #059669;
+
+  --indigo:            #4f46e5;
+  --indigo-dim:        rgba(79, 70, 229, 0.1);
+  --indigo-bright:     #4338ca;
+  --signal:            #10b981;
+  --signal-dim:        rgba(16, 185, 129, 0.1);
+  --signal-bright:     #059669;
+  --amber:             #f59e0b;
+  --amber-dim:         rgba(245, 158, 11, 0.1);
+  --danger:            #ef4444;
+  --danger-dim:        rgba(239, 68, 68, 0.1);
+  --info:              #3b82f6;
+}
+
+/* ─── Tailwind v4 Theme Bridge ─── */
+@theme inline {
+  --color-background:     var(--background);
+  --color-foreground:     var(--foreground);
+  --color-surface:        var(--surface);
+  --color-indigo:         var(--indigo);
+  --color-signal:         var(--signal);
+  --color-amber:          var(--amber);
+  --color-danger:         var(--danger);
+  --font-sans:            var(--font-geist-sans);
+  --font-mono:            var(--font-geist-mono);
+}
+
+/* ─── Base Reset ─── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-muted); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+/* ─── Selection ─── */
+::selection {
+  background: var(--indigo-dim);
+  color: var(--text-primary);
+}
+
+/* ─── Focus Rings ─── */
+:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Input base ─── */
+input, textarea, select {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  transition: border-color 0.15s ease-in-out;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px var(--indigo-dim);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+input[type="range"] { accent-color: var(--indigo); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITY CLASSES (Stripped of glassmorphism)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.glass-raised {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-muted);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.glass-elevated {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+}
+
+.glass-luminous {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+}
+
+.glass-indigo {
+  background: var(--indigo-dim);
+  border: 1px solid var(--border-indigo);
+}
+
+.glass-signal {
+  background: var(--signal-dim);
+  border: 1px solid var(--border-signal);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.font-mono-data {
+  font-family: var(--font-geist-mono), 'Courier New', monospace;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+  letter-spacing: 0.02em;
+}
+
+.text-ledger {
+  font-family: var(--font-geist-mono), monospace;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: 0.025em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MICRO-ANIMATIONS (Subdued)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-up      { animation: fadeUp 0.3s ease-out both; }
+.animate-fade-in      { animation: fadeIn 0.2s ease-out both; }
+.animate-slide-right  { animation: slideInRight 0.25s ease-out both; }
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-raised) 0%,
+    var(--border-subtle) 50%,
+    var(--surface-raised) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERACTIVE STATES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.btn-titan {
+  position: relative;
+  transition: transform 0.1s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out;
+}
+.btn-titan:active { transform: translateY(1px); }
+
+.table-row-titan {
+  transition: background 0.1s ease-in-out;
+}
+.table-row-titan:hover { background: var(--surface-raised); }
+
+/* ─── Status indicator dots (Solid colors, no glow) ─── */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.status-dot.submitted       { background: var(--text-muted); }
+.status-dot.proof_requested { background: var(--amber); }
+.status-dot.proof_submitted { background: var(--info); }
+.status-dot.approved        { background: var(--signal); }
+.status-dot.paid            { background: var(--signal-bright); }
+.status-dot.rejected        { background: var(--danger); }
+.status-dot.disputed        { background: var(--amber); }
+
+/* ─── Sidebar active indicator bar ─── */
+.nav-active-bar {
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 20px;
+  background: var(--indigo);
+  border-radius: 2px 0 0 2px;
+}
+
+/* ─── Debit / Credit ledger colors ─── */
+.ledger-debit  { color: #d97706; }
+.ledger-credit { color: #2563eb; }
+
+/* ─── Backdrop for modals / drawers ─── */
+.titan-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: var(--z-drawer);
+}

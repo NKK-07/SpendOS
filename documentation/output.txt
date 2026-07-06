@@ -1,0 +1,1855 @@
+SPENDOS
+UPI-Native Corporate Spend Platform for Indian Startups
+Complete Product & Engineering Master Document
+Version 1.0  |  Confidential  |  2025
+Document
+Value
+Product Name
+SpendOS
+Product Type
+B2B SaaS + Fintech Platform
+Market
+India — Startups & SMBs (10–500 employees)
+Stage
+Seed / Pre-MVP
+Version
+1.0
+Classification
+Confidential — Internal Use Only
+Authors
+Product Architecture Team
+SECTION 00  
+EXECUTIVE SUMMARY
+Executive Summary
+SpendOS is a UPI-native corporate spend management platform designed specifically for Indian startups and SMBs. It replaces archaic reimbursement workflows with a real-time, mobile-first spend infrastructure that gives every rupee of company money a digital identity — trackable, controllable, and GST-compliant from the moment it leaves the company account.
+Indian startups collectively lose thousands of crores annually to inefficient expense management: delayed reimbursements, lost invoices, fake claims, poor GST reconciliation, and zero real-time spend visibility. Existing solutions are either card-centric (unsuitable for UPI-dominant India), enterprise-heavy (inaccessible for 10–200 person teams), or workflow tools that don't touch the payment rail at all.
+SpendOS attacks this gap from the infrastructure layer up. Employees receive company-funded UPI wallets and virtual cards, spend company money directly, and the system automatically captures, categorises, and reconciles every transaction. Finance teams get a live dashboard of company burn. Founders get instant spend controls. GST records generate themselves.
+Key Metrics at a Glance
+Metric
+Target
+TAM
+₹6,800 Cr+ (Indian SMB expense management)
+SAM
+₹820 Cr (digital-first startups 10–500 employees)
+SOM Year 3
+₹82 Cr (10% of SAM)
+Target ARR/Company
+₹72,000 (₹6,000/month Growth plan)
+CAC Target
+₹8,000 per company
+CAC Payback
+1.3 months
+Gross Margin Target
+72%
+NRR Target
+115%
+Phase 1 MVP Timeline
+Q3 2025
+Seed Ask
+₹1.5 Cr
+Four-Phase Expansion
+Phase 1 — Expense Management SaaS (reimbursement automation, OCR, approvals, dashboard)
+Phase 2 — UPI Spend Wallets (company wallets, direct employee spending, budget controls)
+Phase 3 — Virtual Corporate Cards (online subscription cards, ad-spend, interchange revenue)
+Phase 4 — Financial Infrastructure (credit lines, invoice payments, treasury, embedded finance)
+SECTION 01  
+PRODUCT REQUIREMENTS DOCUMENT
+1. Product Requirements Document (PRD)
+1.1 Problem Statement
+Indian startups and SMBs operate with profoundly broken expense management workflows. The dominant pattern is: employee pays out-of-pocket → photographs a receipt → sends it over WhatsApp or email → waits 5–15 days for manual verification and reimbursement. This process is slow, opaque, fraud-prone, and leaves founders with zero real-time visibility into company spending. Corporate credit cards partially solve this in the US, but in India: UPI dominates physical payments, many vendors don't accept cards, startups cannot easily obtain corporate credit cards, and enterprise expense software is either too expensive or requires card infrastructure that doesn't exist.
+1.2 Vision
+Build the 'Financial Operating System for Indian Startups' — a unified platform where employees spend company money directly via UPI and virtual cards, every transaction is tracked and categorised automatically, approvals happen in real time via tools teams already use (WhatsApp, Slack), and finance teams maintain live, audit-ready books. Reimbursements become extinct.
+1.3 Business Goals
+Capture 500 paying companies within 18 months of Phase 1 launch.
+Achieve ₹3.6 Cr ARR by end of Year 2.
+Reduce average reimbursement cycle to zero for platform users.
+Become the default spend infrastructure for Indian startup accelerators.
+Build the data moat (merchant intelligence, spend benchmarks) that enables Phase 4 credit products.
+1.4 Success Metrics
+Metric
+Definition
+Target (Y1)
+Target (Y2)
+Active Companies
+Companies with ≥1 transaction in last 30 days
+200
+600
+Active Wallets
+Employee wallets with ≥1 transaction in last 30 days
+2,000
+8,000
+Monthly Transaction Volume
+Total ₹ processed through platform
+₹4 Cr
+₹20 Cr
+Reimbursement Rate
+% of expenses processed as reimbursement (lower = better)
+<5%
+<1%
+GST Capture Rate
+% of transactions with GST data auto-extracted
+>75%
+>90%
+Approval Turnaround
+Avg time from spend to approval
+<4 hours
+<1 hour
+NPS
+Net Promoter Score from Finance Managers
+>45
+>60
+Churn Rate (Monthly)
+Companies churning per month
+<2%
+<1.2%
+1.5 User Personas
+Persona 1: Priya Mehta — Founder / CEO
+Company: 60-person logistics SaaS startup, Bangalore
+Pain: Uses personal credit card for company expenses; no visibility into team spend until EOD; gets surprised by budget overruns
+Goal: Real-time spend visibility, instant policy enforcement, less time spent on approvals
+Tech Comfort: High — uses Notion, Slack, Razorpay
+Persona 2: Rahul Sharma — Finance Manager
+Company: 120-person agency, Mumbai
+Pain: Spends 20+ hours/month on manual expense reconciliation; GST claims frequently missed; team uses WhatsApp to send bills
+Goal: Auto-categorised expenses, one-click GST report, ERP sync with Zoho Books
+Tech Comfort: Medium — proficient in Tally and Excel
+Persona 3: Ananya Singh — Sales Executive
+Company: 80-person B2B SaaS, Pune
+Pain: Pays ₹15,000–₹25,000/month in travel and entertainment from personal account; waits 2 weeks for reimbursement; process is humiliating and cash-flow punishing
+Goal: Spend company money directly without out-of-pocket advances
+Tech Comfort: High — uses UPI daily, comfortable with mobile apps
+1.6 User Stories
+ID
+As a...
+I want to...
+So that...
+US-01
+Finance Manager
+Set monthly budgets per department
+Spending is capped proactively
+US-02
+Employee
+Scan a QR code and pay with company money
+I don't use personal funds
+US-03
+Founder
+See live company burn on my phone
+I'm never surprised by overspend
+US-04
+Finance Manager
+Get auto-generated GST reports
+I don't spend hours on reconciliation
+US-05
+Employee
+Upload a receipt and have it auto-categorised
+No manual expense forms
+US-06
+Manager
+Approve expenses via WhatsApp
+I don't need another app
+US-07
+Finance Manager
+Export ledger data to Zoho Books
+My accounting stays in sync
+US-08
+Admin
+Freeze an employee's wallet instantly
+I control spend in real time
+US-09
+Employee
+Check my remaining budget
+I know how much I can spend
+US-10
+Founder
+Get alerted when a department is 80% through budget
+I can act before overspend
+US-11
+Finance Manager
+Download a PDF audit trail
+Compliance and audits are easy
+US-12
+Admin
+Whitelist specific vendors
+Only approved vendors get company money
+1.7 Functional Requirements
+FR-01: Company Wallet Infrastructure
+Companies can create a master company wallet funded via bank transfer or UPI
+Wallet supports sub-wallets per department and per employee
+Admin can allocate, reallocate, freeze, and top up sub-wallets in real time
+Each employee receives a unique company-linked UPI ID (e.g., emp.001@spendos)
+FR-02: UPI-Based Employee Spending
+Employees can initiate UPI payments (QR scan, UPI ID, mobile number) from their company wallet
+Payments enforce pre-set limits, category restrictions, and vendor whitelists
+Real-time webhook captures merchant name, amount, timestamp, and transaction reference
+Transactions below auto-approval threshold require no additional action from employee
+FR-03: Receipt OCR & AI Parsing
+Employees can upload bill/invoice images or screenshots via mobile app or WhatsApp bot
+AI extracts: GST number, merchant name, tax amount, invoice total, expense category
+Extracted data creates a finance-ready expense record attached to the transaction
+Confidence score displayed; low-confidence extractions flagged for human review
+FR-04: Smart Approval Workflows
+Configurable approval rules: amount threshold, category, merchant type, department
+Multi-level approval chains (employee → manager → CFO → founder)
+Approvals deliverable via in-app, WhatsApp Business API, Slack app, email
+SLA-based escalation: if not approved within X hours, escalate automatically
+FR-05: Spend Controls & Policy Engine
+Admin can set daily/weekly/monthly limits at company, department, and employee level
+Category blocking: restrict spend on personal purchases, alcohol, unapproved categories
+Vendor whitelisting/blacklisting by UPI ID or merchant category code
+Instant wallet freeze and unfreeze from admin dashboard or mobile app
+FR-06: Real-Time Dashboard
+Founder view: live company burn, department breakdown, policy violations, pending approvals
+Finance view: transaction ledger, GST claims, recurring vendor payments, ERP sync status
+Employee view: remaining budget, transaction history, pending approvals, receipt upload
+All dashboards update in real time via WebSocket or SSE
+FR-07: Accounting Integrations
+Bi-directional sync with Zoho Books, Tally, QuickBooks, and generic CSV export
+Auto-maps expense categories to chart of accounts
+GST-compliant invoice storage with GSTIN, tax breakdowns, and HSN/SAC codes
+Webhook support for custom ERP integrations
+FR-08: GST & Compliance Automation
+Automatic GSTIN lookup and validation via GST portal API
+Monthly GSTR-2A reconciliation report (purchases vs. supplier filings)
+Missing invoice alerts: flags transactions with no valid tax invoice
+Audit-ready PDF export of all expense records with digital signatures
+1.8 Non-Functional Requirements
+Category
+Requirement
+Target
+Performance
+API P95 response time
+< 300ms
+Performance
+Dashboard load time (first contentful paint)
+< 2s on 4G
+Availability
+Platform uptime (monthly)
+99.9%
+Availability
+Payment processing uptime
+99.95%
+Scalability
+Concurrent active sessions
+10,000 (Y2)
+Security
+Data encryption at rest
+AES-256
+Security
+Data encryption in transit
+TLS 1.3
+Security
+PII data handling
+DPDP Act 2023 compliant
+Compliance
+Financial data regulations
+RBI PPI guidelines
+Reliability
+Payment transaction success rate
+>99.5%
+Observability
+Error detection to alert time
+< 5 minutes
+Recovery
+RTO (Recovery Time Objective)
+< 2 hours
+Recovery
+RPO (Recovery Point Objective)
+< 1 hour
+1.9 Risks
+Risk
+Likelihood
+Impact
+Mitigation
+RBI PPI licence delayed
+Medium
+High
+Launch Phase 1 without wallet; use banking partner for Phase 2
+UPI API access restrictions
+Low
+High
+Partner with NBFC/bank with existing NPCI empanelment
+Adoption resistance from finance teams
+Medium
+Medium
+White-glove onboarding; 30-min setup guarantee; dedicated CS
+UPI margin compression
+High
+Medium
+Build software revenue moat before depending on transaction margin
+Competitor with banking backing enters
+Medium
+High
+Move fast; lock in accelerator and CA channel partnerships
+Data breach / fraud
+Low
+Very High
+ISO 27001 posture from day 1; fraud ML layer in Phase 2
+1.10 Acceptance Criteria (Phase 1 MVP)
+Company can onboard, create department budgets, and invite employees in < 30 minutes
+Employee can submit an expense with receipt via mobile app in < 60 seconds
+Approval can be granted via WhatsApp reply without opening a browser
+Finance dashboard shows all transactions within 5 seconds of payment
+GST report for a calendar month can be exported as PDF in < 10 seconds
+Admin can freeze any employee wallet and the change propagates in < 3 seconds
+SECTION 02  
+MARKET REQUIREMENTS DOCUMENT
+2. Market Requirements Document (MRD)
+2.1 Market Analysis
+India has approximately 84,000+ DPIIT-recognised startups and over 63 million MSMEs as of 2025. The digitisation wave — accelerated by UPI, GST, and Aadhaar — has created the infrastructure for a modern financial operating layer. Yet corporate spend management remains in the stone age for most sub-500-employee companies. They use WhatsApp groups as an expense management system.
+The Indian expense management software market was valued at approximately ₹1,200 Cr in 2024 and is projected to grow at 18% CAGR through 2029, driven by GST compliance pressure, startup proliferation, and remote/hybrid team expansion. The adjacent corporate card and business banking market adds another ₹5,600 Cr TAM.
+2.2 TAM / SAM / SOM
+Market
+Value
+Basis
+Total Addressable Market (TAM)
+₹6,800 Cr+
+Indian SMB finance, expense management, and corporate card market combined
+Serviceable Addressable Market (SAM)
+₹820 Cr
+Digital-first startups and SMBs with 10–500 employees, open to SaaS fintech tooling
+Serviceable Obtainable Market Y3 (SOM)
+₹82 Cr
+10% SAM capture by Year 3 based on comparable Indian B2B SaaS growth curves
+2.3 Competitor Analysis
+Company
+Segment
+UPI-Native
+SMB Focus
+GST Auto
+Pricing
+Key Gap
+Karbon Card
+Corporate Cards
+No
+Partial
+No
+₹999+/user
+Card-only; no UPI
+Volopay
+Multi-currency + Cards
+No
+Partial
+Partial
+₹799+/user
+Enterprise; complex onboarding
+Happay
+Expense + Cards
+No
+No
+Partial
+Custom enterprise
+No self-serve; card-first
+Zoho Expense
+Expense SaaS
+No
+Yes
+Partial
+₹200/user/mo
+No payment rail; just tracking
+Fyle
+Expense SaaS
+No
+Yes
+No
+₹399+/user/mo
+US-focused design
+Open Money
+Neo-banking
+Partial
+Yes
+No
+Transaction-based
+Not spend-control focused
+Ramp (US)
+Corporate Cards
+N/A
+No
+N/A
+$12+/user
+Not India; not UPI
+SpendOS
+UPI Spend OS
+✓ Native
+✓ Core
+✓ Auto
+Free + ₹299/user
+Purpose-built for India
+2.4 Competitive Differentiators
+UPI-Native Architecture: Works at any QR code, not just card-accepting merchants
+Zero-Reimbursement Model: Employees spend company money directly — the core UX shift
+GST Intelligence: Auto-extracts GSTIN, validates, and reconciles — no manual data entry
+India-First Compliance: Built for RBI PPI guidelines, DPDP Act, and GST Council requirements
+Multi-Channel Approvals: WhatsApp, Slack, email — no new app install required for approvers
+Startup Pricing: Free tier + per-user SaaS; no enterprise sales cycle or annual commit
+Network Effects: Merchant intelligence, fraud signals, and spend benchmarks improve with scale
+2.5 Pricing Strategy
+Tier
+Price
+Employees
+Key Features
+Free
+₹0/month
+Up to 10
+5 wallets, basic approvals, manual receipt upload, 30-day history
+Growth
+₹299/user/month
+11–100
+Unlimited wallets, AI OCR, WhatsApp approvals, GST reports, Zoho/QuickBooks sync
+Scale
+₹499/user/month
+101–500
+All Growth + virtual cards, advanced analytics, Tally sync, priority support, custom roles
+Enterprise
+Custom
+500+
+All Scale + dedicated CSM, custom integrations, SLA, SOC 2 report, multi-entity support
+ℹ  Transaction revenue (0.1–0.25% on card spend) and float yield are additive. Credit products launch in Phase 4.
+2.6 Go-To-Market Strategy
+Phase 1 GTM: The Wedge
+Lead with 'Replace reimbursements in 1 day' — not fintech, not banking. Distribution through:
+Startup accelerators and incubators (YC India, 100X.VC, Antler, Sequoia Spark programs)
+CA and accounting firm partnerships (CAs recommend tools; they feel the GST pain acutely)
+Founder communities (LetsVenture, SaaSBoomi, iSPIRT, Chennai Angels)
+Finance manager communities (CFO Connect, Finance Leaders Forum on LinkedIn)
+Content marketing: 'The Indian Startup Finance Stack' blog series targeting finance manager searches
+Phase 2 GTM: Expansion
+Product-led growth: free tier → viral as employees experience direct UPI spending
+Referral programme: 3 months free for both referrer and referree
+Embedded distribution: integrate into startup legal/accounting platforms (Razorpay Rize, Vakilsearch)
+2.7 Product Positioning
+SpendOS is positioned as the 'control layer' for company money in India — not an expense tracker (reactive) but a spend operating system (proactive). The framing: 'Your company has UPI. Your money should too.'
+SECTION 03  
+TECHNICAL REQUIREMENTS DOCUMENT
+3. Technical Requirements Document (TRD)
+3.1 System Architecture Overview
+SpendOS is designed as a cloud-native, multi-tenant SaaS platform built on a microservices-adjacent modular monolith in Phase 1, with a clear migration path to independent microservices as load demands. The core philosophy is: UPI payment rail at the centre, intelligence layer on top, integration layer at the edges.
+3.2 High-Level Architecture (Mermaid Diagram)
+graph TB
+  subgraph Client Layer
+    MOB[React Native Mobile App]
+    WEB[Next.js Web Dashboard]
+    WA[WhatsApp Bot - Twilio / 360dialog]
+    SLK[Slack App]
+  end
+  subgraph API Gateway
+    GW[Kong API Gateway + Rate Limiting]
+    AUTH[Auth Service - Supabase Auth]
+  end
+  subgraph Core Services
+    WS[Wallet Service]
+    TXN[Transaction Service]
+    EXP[Expense Service]
+    APR[Approval Service]
+    POL[Policy Engine]
+    NOT[Notification Service]
+    OCR[AI OCR Service]
+    GST[GST Intelligence Service]
+  end
+  subgraph Data Layer
+    PG[(PostgreSQL - Primary)]
+    RD[(Redis - Cache & Sessions)]
+    S3[(S3 - Receipt Storage)]
+    MQ[RabbitMQ / SQS - Message Queue]
+  end
+  subgraph Integration Layer
+    UPI[UPI Gateway - NPCI Partner]
+    GST_GOV[GST Portal API]
+    ZOHO[Zoho Books API]
+    TALLY[Tally XML Bridge]
+    WA_API[WhatsApp Business API]
+  end
+3.3 Service Breakdown
+Service
+Technology
+Responsibilities
+Scale Target
+API Gateway
+Kong OSS
+Rate limiting, auth, routing, logging
+50,000 req/min
+Auth Service
+Supabase Auth + custom JWT
+Login, MFA, session, RBAC
+10,000 concurrent
+Wallet Service
+Node.js + PostgreSQL
+Balance management, ledger, transfers
+5,000 TPS
+Transaction Service
+Node.js + PostgreSQL + Redis
+UPI processing, webhook ingestion, idempotency
+2,000 TPS
+Expense Service
+Node.js + PostgreSQL + S3
+Receipt management, categorisation, linking
+1,000 req/min
+Approval Service
+Node.js + RabbitMQ
+Workflow orchestration, SLA tracking, escalations
+500 req/min
+Policy Engine
+Node.js + Redis
+Rule evaluation, limit checks, vendor matching
+10,000 TPS
+OCR Service
+Python + FastAPI + AWS Textract
+Receipt parsing, GST extraction, confidence scoring
+200 req/min
+GST Intelligence
+Python + FastAPI + GSTIN API
+GSTIN validation, GSTR-2A matching, ITC calculation
+100 req/min
+Notification Service
+Node.js + Bull Queue
+WhatsApp, Slack, email, push notifications
+5,000 notif/hour
+Analytics Service
+Python + ClickHouse
+Aggregations, dashboards, spend intelligence
+Read-heavy
+Integration Service
+Node.js
+Zoho, Tally, QuickBooks sync, webhook delivery
+100 req/min
+3.4 Frontend Architecture
+Web Dashboard: Next.js 14 (App Router), TypeScript, Tailwind CSS, Shadcn/ui component library
+Mobile App: React Native (Expo managed workflow), TypeScript, NativeWind
+State Management: Zustand for global state, TanStack Query for server state and caching
+Real-time: Socket.io client for live dashboard updates
+Charts: Recharts (web), Victory (mobile)
+Forms: React Hook Form + Zod validation
+Monorepo: Turborepo with shared packages (types, api-client, ui-components)
+3.5 Backend Architecture
+Runtime: Node.js 20 LTS with TypeScript (Fastify framework for performance)
+ORM: Prisma with PostgreSQL for type-safe database access
+Queue: BullMQ (Redis-backed) for async jobs; RabbitMQ for inter-service events
+Caching: Redis 7 for session store, rate limiting, policy cache, real-time balance cache
+File Storage: AWS S3 with pre-signed URLs for receipt uploads
+Background Jobs: BullMQ workers for OCR processing, ERP sync, notification dispatch
+3.6 Database Architecture
+Primary Database: PostgreSQL 16 with pgcrypto for encrypted PII columns
+Multi-tenancy: Row-level tenancy with tenant_id on every table + RLS policies
+Read Replicas: 2x read replicas behind PgBouncer for dashboard queries
+Analytics: ClickHouse (separate cluster) for aggregated spend analytics
+Migrations: Prisma Migrate with forward-only migration policy in production
+Backup: Daily full backup + continuous WAL archiving to S3 (30-day retention)
+3.7 Security Architecture
+All PII (name, Aadhaar ref, bank details) encrypted at rest with AES-256 via pgcrypto
+TLS 1.3 enforced on all endpoints; HSTS headers; certificate pinning in mobile app
+JWT tokens with 15-minute expiry; refresh token rotation with single-use policy
+RBAC with five roles: Super Admin, Company Admin, Finance Manager, Manager, Employee
+All financial mutations require idempotency key to prevent double-spend
+WAF (AWS WAF or Cloudflare) in front of API gateway
+Secrets management: AWS Secrets Manager; no secrets in environment variables in production
+Penetration testing: quarterly via external vendor; bug bounty programme post-launch
+3.8 Authentication & Authorization Strategy
+Authentication
+Email/password with bcrypt (cost factor 12)
+OTP via SMS (MSG91) for employee onboarding and MFA
+Google SSO for company admins
+WhatsApp OTP for approvals (no password required for approvers)
+Authorization (RBAC Matrix)
+Permission
+Super Admin
+Company Admin
+Finance Mgr
+Manager
+Employee
+Create company
+✓
+—
+—
+—
+—
+Manage wallets
+✓
+✓
+✓
+—
+—
+View all transactions
+✓
+✓
+✓
+Dept only
+Own only
+Set spend policies
+✓
+✓
+✓
+—
+—
+Approve expenses
+✓
+✓
+✓
+✓ (dept)
+—
+Export GST reports
+✓
+✓
+✓
+—
+—
+Freeze wallets
+✓
+✓
+✓
+—
+—
+Initiate payments
+✓
+✓
+✓
+✓
+✓
+3.9 Scalability Strategy
+Horizontal scaling of all stateless services via Kubernetes HPA (CPU + custom metrics)
+Database connection pooling via PgBouncer (transaction mode for API services)
+Read operations routed to read replicas; writes to primary only
+Redis cluster mode for session and cache layer scalability
+Event-driven architecture: payment events flow through message queue, consumers scale independently
+CDN (Cloudflare) for static assets and API caching at edge for public endpoints
+3.10 Monitoring & Observability
+Metrics: Prometheus + Grafana (infrastructure and business metrics dashboards)
+APM: Datadog APM or New Relic for distributed tracing
+Logs: ELK stack (Elasticsearch, Logstash, Kibana) — 90-day retention
+Error Tracking: Sentry (web + mobile + backend)
+Uptime: Better Uptime for external endpoint monitoring with PagerDuty alerts
+Business Metrics: Custom ClickHouse dashboard for real-time transaction analytics
+3.11 CI/CD Pipeline
+Developer Push → GitHub → GitHub Actions CI:
+  1. Lint (ESLint + Prettier) + TypeScript check
+  2. Unit tests (Jest) + Integration tests
+  3. Docker build + image scan (Trivy)
+  4. Push to ECR (staging tag)
+  5. Deploy to staging (ArgoCD GitOps)
+  6. E2E tests (Playwright) against staging
+  7. Manual approval gate for production
+  8. Blue-green deploy to production
+  9. Smoke tests + automated rollback trigger
+3.12 Infrastructure Requirements
+Component
+Service
+Specification
+API Servers
+AWS EKS (Kubernetes)
+t3.medium nodes, auto-scaling 3–20
+Database Primary
+AWS RDS PostgreSQL 16
+db.r6g.large, Multi-AZ, 500 GB GP3
+Database Replicas
+AWS RDS Read Replicas
+2x db.r6g.medium
+Cache
+AWS ElastiCache Redis
+cache.r6g.large, cluster mode, 3 shards
+Object Storage
+AWS S3
+Standard + Intelligent Tiering
+CDN
+Cloudflare Pro
+Global edge, WAF, DDoS protection
+Message Queue
+AWS SQS + RabbitMQ (EC2)
+For reliability and fan-out patterns
+Analytics DB
+ClickHouse Cloud
+Managed, scales automatically
+Container Registry
+AWS ECR
+Private registry with vulnerability scanning
+3.13 Third-Party Integrations
+Integration
+Provider
+Purpose
+UPI Gateway
+NPCI partner (RazorpayX / PayU / Cashfree for Phase 1)
+Payment initiation and webhook
+GST Portal
+GSTIN.gov.in API + Sandbox
+GSTIN validation, GSTR-2A pull
+OCR / AI
+AWS Textract + OpenAI GPT-4o Vision
+Receipt parsing and categorisation
+WhatsApp
+Twilio WhatsApp API / 360dialog
+Approval messages and bot
+Slack
+Slack API (OAuth app)
+Approval notifications
+Email
+AWS SES + SendGrid
+Transactional email
+SMS OTP
+MSG91
+Authentication OTP
+Accounting
+Zoho Books API, QuickBooks API, Tally XML
+Ledger sync
+KYC
+DigiLocker API + Aadhaar eKYC
+Company and employee verification
+Monitoring
+Datadog + Sentry
+APM and error tracking
+SECTION 04  
+UI/UX SPECIFICATION
+4. UI/UX Specification
+4.1 Design System
+Color Palette
+Token
+Hex
+Usage
+--color-primary
+#1E3A5F
+Headers, primary CTAs, navigation
+--color-accent
+#00ACC1
+Interactive elements, links, highlights
+--color-success
+#2E7D32
+Approved, active, positive states
+--color-warning
+#E65100
+Pending, policy violations, alerts
+--color-danger
+#C62828
+Rejected, frozen, error states
+--color-bg
+#F5F7FA
+Page backgrounds
+--color-surface
+#FFFFFF
+Cards, modals, input backgrounds
+--color-text-primary
+#1A1A2E
+Body text
+--color-text-muted
+#607D8B
+Secondary labels, captions
+--color-border
+#E0E0E0
+Dividers, card borders, inputs
+Typography
+Element
+Font
+Size
+Weight
+Line Height
+Display / Hero
+Inter
+32–48px
+700
+1.2
+Heading 1
+Inter
+28px
+700
+1.3
+Heading 2
+Inter
+22px
+600
+1.3
+Heading 3
+Inter
+18px
+600
+1.4
+Body Regular
+Inter
+16px
+400
+1.6
+Body Small
+Inter
+14px
+400
+1.5
+Label / Caption
+Inter
+12px
+500
+1.4
+Monospace (amounts)
+JetBrains Mono
+14–20px
+600
+1.4
+Responsive Breakpoints
+Mobile: 320px – 767px (primary; most employees will use mobile)
+Tablet: 768px – 1023px (Finance managers on iPad)
+Desktop: 1024px – 1440px (Finance managers, founders on web)
+Wide: 1441px+ (analytics-heavy dashboards)
+4.2 Information Architecture
+Employee App Navigation
+Home (spend overview, remaining budget, recent transactions)
+Pay (scan QR, enter UPI ID, recent vendors)
+Expenses (transaction history, receipt upload, expense status)
+Approvals (pending approvals for managers)
+Profile (settings, notifications, limits)
+Admin Web Dashboard Navigation
+Overview (company burn, department summary, alerts)
+Wallets (company wallet, department wallets, employee wallets)
+Transactions (ledger, filters, export)
+Expenses (all expense records, receipts, GST data)
+Approvals (pending, approved, rejected workflows)
+Policies (spend limits, categories, vendor rules)
+Reports (GST reports, department analytics, ERP sync)
+Settings (company profile, integrations, team management, billing)
+4.3 Screen-by-Screen Breakdown (Key Screens)
+Screen 1: Employee Home (Mobile)
+Purpose: At-a-glance spend status and quick-access pay button
+Components: Budget ring (₹X of ₹Y used), Recent transactions list, Floating 'Pay' CTA, Notification bell
+User Actions: Tap Pay → navigate to payment screen; tap transaction → detail; tap notification
+API Dependencies: GET /wallets/me, GET /transactions?limit=5
+States: Loading skeleton → Loaded → Empty (no transactions yet) → Frozen wallet warning
+Edge Cases: Wallet frozen by admin → show banner with contact finance message
+Screen 2: Pay Screen (Mobile)
+Purpose: Initiate UPI payment from company wallet
+Components: QR Scanner, UPI ID input, Amount input, Category selector, Note field, Policy limit indicator
+User Actions: Scan QR → auto-populate merchant; enter amount; select category; confirm payment
+API Dependencies: POST /payments/initiate, GET /policies/check
+Validation Rules: Amount must not exceed remaining budget; amount must not exceed single-transaction limit; category must not be blocked
+States: Default → Scanning → Amount entry → Policy check → Confirming → Success/Failed
+Edge Cases: Vendor on blacklist → show reason and block; insufficient balance → show top-up request option
+Screen 3: Finance Dashboard (Web)
+Purpose: Real-time command centre for finance managers
+Components: Burn rate chart (7d/30d/MTD), Department spend breakdown (bar chart), Pending approvals count badge, Policy violation feed, GST capture rate gauge, Quick actions bar
+User Actions: Drill into department → department detail; click approval → approval modal; export → date range picker → download PDF/CSV
+API Dependencies: GET /analytics/summary, GET /approvals?status=pending, SSE /stream/transactions
+States: Loading → Live (updates via SSE every 5 seconds) → Offline (connection lost banner)
+Edge Cases: No transactions yet → empty state with onboarding checklist
+Screen 4: Approval (WhatsApp)
+Purpose: Allow managers to approve/reject expense without opening app
+Components: Formatted WhatsApp message with: employee name, amount, merchant, category, receipt thumbnail link; Reply options: '1' to approve, '2' to reject with reason
+User Actions: Reply '1' → webhook triggers approval; reply '2 [reason]' → rejection with reason captured
+API Dependencies: Webhook POST /approvals/{id}/respond
+States: Pending → Approved → Rejected → Expired (SLA breach, auto-escalated)
+Edge Cases: Invalid reply format → bot sends correction prompt; approver no longer has permission → notify and re-route
+Screen 5: GST Report (Web)
+Purpose: Generate, view, and export GST reconciliation report
+Components: Month/period selector, Summary cards (Input Tax Credit claimable, missing invoices, total spend), Detailed transaction table with GSTIN, tax amounts, invoice status; Export to PDF / CSV buttons
+User Actions: Select period → data loads; filter by GSTIN/vendor; export
+API Dependencies: GET /reports/gst?period=2025-05, GET /reports/gst/export
+Validation Rules: Cannot generate future months; warns if GSTR-2A not yet filed by vendor
+Edge Cases: No GST transactions in period → show message; GSTIN validation failure → flag rows
+SECTION 05  
+BACKEND SPECIFICATION
+5. Backend Specification
+5.1 Database Schema
+Entity: companies
+Column
+Type
+Constraints
+Description
+id
+UUID
+PK, DEFAULT gen_random_uuid()
+Company identifier
+name
+VARCHAR(255)
+NOT NULL
+Legal company name
+gstin
+VARCHAR(15)
+NULLABLE, UNIQUE
+GST Identification Number
+pan
+VARCHAR(10)
+NOT NULL, UNIQUE
+PAN card number (encrypted)
+registered_address
+JSONB
+NOT NULL
+Address as JSON
+plan_tier
+ENUM
+NOT NULL, DEFAULT 'free'
+free|growth|scale|enterprise
+wallet_balance
+BIGINT
+NOT NULL, DEFAULT 0
+Balance in paise
+kyc_status
+ENUM
+NOT NULL, DEFAULT 'pending'
+pending|submitted|verified|rejected
+is_active
+BOOLEAN
+NOT NULL, DEFAULT true
+Soft delete flag
+created_at
+TIMESTAMPTZ
+NOT NULL, DEFAULT NOW()
+Audit
+updated_at
+TIMESTAMPTZ
+NOT NULL, DEFAULT NOW()
+Audit
+ℹ  Indexes: gstin, pan, is_active, created_at. RLS policy: company_id matches auth.company_id.
+Entity: users
+Column
+Type
+Constraints
+Description
+id
+UUID
+PK, DEFAULT gen_random_uuid()
+User identifier
+company_id
+UUID
+FK → companies.id, NOT NULL
+Multi-tenant key
+email
+VARCHAR(255)
+NOT NULL, UNIQUE
+Login email
+phone
+VARCHAR(15)
+NOT NULL
+Mobile (encrypted)
+full_name
+VARCHAR(255)
+NOT NULL
+Display name
+role
+ENUM
+NOT NULL
+company_admin|finance_manager|manager|employee
+department_id
+UUID
+FK → departments.id, NULLABLE
+Department assignment
+is_active
+BOOLEAN
+NOT NULL, DEFAULT true
+Soft delete
+last_login_at
+TIMESTAMPTZ
+NULLABLE
+Audit
+created_at
+TIMESTAMPTZ
+NOT NULL, DEFAULT NOW()
+Audit
+ℹ  Indexes: company_id, email, phone, department_id, role.
+Entity: wallets
+Column
+Type
+Constraints
+Description
+id
+UUID
+PK
+Wallet identifier
+company_id
+UUID
+FK → companies.id, NOT NULL
+Tenant key
+owner_type
+ENUM
+NOT NULL
+company|department|employee
+owner_id
+UUID
+NOT NULL
+References companies/departments/users
+balance
+BIGINT
+NOT NULL, DEFAULT 0
+Balance in paise
+monthly_limit
+BIGINT
+NULLABLE
+Monthly spend cap in paise
+daily_limit
+BIGINT
+NULLABLE
+Daily spend cap in paise
+single_txn_limit
+BIGINT
+NULLABLE
+Per-transaction cap
+upi_vpa
+VARCHAR(100)
+UNIQUE, NULLABLE
+Virtual payment address
+is_frozen
+BOOLEAN
+NOT NULL, DEFAULT false
+Freeze flag
+frozen_reason
+TEXT
+NULLABLE
+Reason if frozen
+created_at
+TIMESTAMPTZ
+NOT NULL, DEFAULT NOW()
+Audit
+ℹ  Indexes: company_id, owner_type+owner_id, upi_vpa, is_frozen. Unique constraint: one wallet per owner.
+Entity: transactions
+Column
+Type
+Constraints
+Description
+id
+UUID
+PK
+Transaction ID
+company_id
+UUID
+FK → companies.id
+Tenant key
+wallet_id
+UUID
+FK → wallets.id
+Source wallet
+user_id
+UUID
+FK → users.id
+Initiating user
+amount
+BIGINT
+NOT NULL
+Amount in paise
+currency
+CHAR(3)
+NOT NULL, DEFAULT 'INR'
+ISO currency
+merchant_name
+VARCHAR(255)
+NULLABLE
+Merchant display name
+merchant_upi_id
+VARCHAR(100)
+NULLABLE
+Payee VPA
+category
+VARCHAR(100)
+NULLABLE
+Expense category
+upi_ref_id
+VARCHAR(100)
+UNIQUE, NULLABLE
+NPCI transaction ref
+status
+ENUM
+NOT NULL
+pending|completed|failed|reversed
+approval_status
+ENUM
+NOT NULL, DEFAULT 'auto_approved'
+auto_approved|pending|approved|rejected
+gstin_of_merchant
+VARCHAR(15)
+NULLABLE
+Extracted GSTIN
+tax_amount
+BIGINT
+NOT NULL, DEFAULT 0
+GST amount in paise
+expense_id
+UUID
+FK → expenses.id, NULLABLE
+Linked expense record
+metadata
+JSONB
+NULLABLE
+Additional data
+created_at
+TIMESTAMPTZ
+NOT NULL, DEFAULT NOW()
+Audit
+ℹ  Indexes: company_id, wallet_id, user_id, status, approval_status, created_at, merchant_upi_id, gstin_of_merchant.
+ER Diagram (Mermaid)
+erDiagram
+  companies ||--o{ departments : has
+  companies ||--o{ users : employs
+  companies ||--|| wallets : owns
+  departments ||--o{ users : contains
+  departments ||--o{ wallets : has
+  users ||--o{ wallets : assigned
+  wallets ||--o{ transactions : initiates
+  transactions ||--o| expenses : linked_to
+  expenses ||--o{ receipts : has
+  transactions ||--o{ approval_requests : requires
+  approval_requests }o--|| users : assigned_to
+  companies ||--o{ spend_policies : defines
+  spend_policies }o--|| departments : applies_to
+5.2 Service Layer
+WalletService
+Responsibilities: Balance management, allocation, freeze/unfreeze, top-up, transfer between wallets
+Methods: createWallet(), allocateFunds(walletId, amount), debitWallet(walletId, amount, txnId), creditWallet(), freezeWallet(), unfreezeWallet(), getBalance()
+Business Rules: Debit must be atomic with idempotency key; balance cannot go negative (throw InsufficientFundsError); frozen wallets reject all debits; all mutations logged to wallet_ledger
+Error Handling: InsufficientFundsError (400), WalletFrozenError (403), WalletNotFoundError (404), OptimisticLockError (409 — retry with backoff)
+TransactionService
+Responsibilities: Payment initiation, UPI webhook processing, status management, refunds
+Methods: initiatePayment(userId, amount, payeeVpa, category), processWebhook(payload), updateStatus(txnId, status), reverseTransaction(txnId)
+Business Rules: Pre-payment policy check required; idempotency key mandatory; webhook signatures verified with HMAC-SHA256; failed payments trigger wallet credit reversal
+Error Handling: PolicyViolationError (422), DuplicateTransactionError (409), PaymentGatewayError (502 with retry)
+PolicyEngine
+Responsibilities: Real-time policy evaluation before every payment, policy CRUD, violation alerting
+Methods: evaluatePayment(walletId, amount, merchantVpa, category), createPolicy(), updatePolicy(), getPoliciesForWallet()
+Business Rules: Policy hierarchy: company → department → employee (most restrictive wins); policies cached in Redis with 60s TTL; cache invalidation on policy update
+Error Handling: PolicyNotFoundError (404), ConflictingPoliciesError (422)
+ApprovalService
+Responsibilities: Workflow orchestration, SLA tracking, multi-channel notification, escalation
+Methods: createApprovalRequest(txnId, approverId), respondToApproval(requestId, decision, reason), escalateOverdue(), getApprovalStatus(requestId)
+Business Rules: SLA configured per company (default 4 hours); escalation triggers at 80% SLA; expired approvals escalate to next level; WhatsApp/Slack approval mapped back to request ID via secure token
+Error Handling: ApprovalExpiredError (410), UnauthorizedApproverError (403)
+OCRService
+Responsibilities: Receipt image processing, data extraction, confidence scoring, category suggestion
+Methods: processReceipt(s3Key, transactionId), extractGstData(rawText), suggestCategory(merchantName, amount)
+Business Rules: Queue-based processing (async); results stored in expenses table; low-confidence (<70%) flags for human review; GSTIN validated against GST portal before storing
+Error Handling: InvalidImageError (400), OCRTimeoutError (504), GSTINValidationError (422)
+SECTION 06  
+API SPECIFICATION
+6. API Specification
+All endpoints use base URL: https://api.spendos.in/v1. Authentication: Bearer JWT in Authorization header except where noted. Rate limits in brackets.
+6.1 Authentication APIs
+Method
+Route
+Description
+Auth
+Rate Limit
+POST
+/auth/signup
+Register new company + admin user
+None
+5/min/IP
+POST
+/auth/login
+Email + password login, returns JWT + refresh token
+None
+10/min/IP
+POST
+/auth/otp/send
+Send SMS OTP to phone
+None
+3/min/phone
+POST
+/auth/otp/verify
+Verify OTP, return session token
+None
+5/min/phone
+POST
+/auth/refresh
+Refresh JWT using refresh token
+Refresh token
+60/min
+POST
+/auth/logout
+Invalidate refresh token
+Bearer
+60/min
+POST
+/auth/google
+Google OAuth login/signup
+None
+10/min/IP
+POST /auth/login — Example
+Request: { "email": "priya@acme.com", "password": "••••••••" }
+Response 200: { "access_token": "eyJ...", "refresh_token": "...", "expires_in": 900, "user": { "id": "...", "role": "company_admin" } }
+Response 401: { "error": "INVALID_CREDENTIALS", "message": "Email or password is incorrect" }
+6.2 Wallet APIs
+Method
+Route
+Description
+Auth
+Rate Limit
+GET
+/wallets
+List all wallets for company
+Bearer (admin/finance)
+60/min
+GET
+/wallets/me
+Get authenticated user's wallet
+Bearer
+120/min
+GET
+/wallets/:id
+Get specific wallet details + balance
+Bearer (admin)
+120/min
+POST
+/wallets/:id/allocate
+Allocate funds from company wallet to sub-wallet
+Bearer (admin)
+30/min
+POST
+/wallets/:id/freeze
+Freeze a wallet with reason
+Bearer (admin/finance)
+20/min
+POST
+/wallets/:id/unfreeze
+Unfreeze a wallet
+Bearer (admin/finance)
+20/min
+PATCH
+/wallets/:id/limits
+Update spend limits
+Bearer (admin/finance)
+30/min
+GET
+/wallets/:id/ledger
+Paginated ledger of all entries
+Bearer (admin/finance)
+60/min
+6.3 Transaction (Payment) APIs
+Method
+Route
+Description
+Auth
+Rate Limit
+POST
+/payments/initiate
+Initiate UPI payment from wallet
+Bearer
+30/min/user
+GET
+/transactions
+List transactions (filterable)
+Bearer
+60/min
+GET
+/transactions/:id
+Get transaction detail
+Bearer
+120/min
+POST
+/transactions/:id/receipt
+Upload receipt for transaction
+Bearer
+20/min
+GET
+/transactions/:id/receipt
+Get receipt image (pre-signed S3 URL)
+Bearer
+120/min
+POST
+/webhooks/upi
+Receive UPI gateway webhook
+HMAC-SHA256 sig
+1000/min
+POST /payments/initiate — Full Schema
+Request Body: {
+  "payee_vpa": "merchant@okhdfc",      // required
+  "amount": 150000,                    // required, in paise
+  "category": "travel",                // required
+  "note": "Client dinner",             // optional
+  "idempotency_key": "uuid-v4"         // required
+}
+Response 201: {
+  "transaction_id": "txn_01abc...",
+  "status": "pending",
+  "approval_required": false,
+  "upi_ref_id": "320924123456789"
+}
+Response 422: { "error": "POLICY_VIOLATION", "rule": "daily_limit_exceeded", "limit": 500000, "current": 480000 }
+6.4 Approval APIs
+Method
+Route
+Description
+Auth
+Rate Limit
+GET
+/approvals
+List pending/historical approvals
+Bearer (manager+)
+60/min
+GET
+/approvals/:id
+Get approval request detail
+Bearer (manager+)
+120/min
+POST
+/approvals/:id/approve
+Approve an expense
+Bearer (manager+)
+30/min
+POST
+/approvals/:id/reject
+Reject with mandatory reason
+Bearer (manager+)
+30/min
+POST
+/approvals/respond/:token
+Respond via WhatsApp/Slack token (no JWT)
+Signed token
+30/min
+6.5 Report APIs
+Method
+Route
+Description
+Auth
+Rate Limit
+GET
+/reports/gst
+GST reconciliation report for period
+Bearer (finance+)
+20/min
+GET
+/reports/gst/export
+Export GST report as PDF or CSV
+Bearer (finance+)
+5/min
+GET
+/reports/analytics/summary
+Company spend summary and trends
+Bearer (finance+)
+60/min
+GET
+/reports/analytics/departments
+Per-department breakdown
+Bearer (finance+)
+60/min
+GET
+/reports/analytics/vendors
+Top vendors by spend
+Bearer (finance+)
+60/min
+GET
+/reports/export/ledger
+Full ledger export (CSV)
+Bearer (finance+)
+5/min
+6.6 Policy APIs
+Method
+Route
+Description
+Auth
+Rate Limit
+GET
+/policies
+List all company spend policies
+Bearer (admin/finance)
+60/min
+POST
+/policies
+Create a spend policy
+Bearer (admin/finance)
+20/min
+PUT
+/policies/:id
+Update a spend policy
+Bearer (admin/finance)
+20/min
+DELETE
+/policies/:id
+Soft-delete a policy
+Bearer (admin)
+10/min
+POST
+/policies/check
+Pre-flight policy check for amount+category+wallet
+Bearer
+120/min
+6.7 Webhook APIs
+Method
+Route
+Description
+Auth
+POST
+/webhooks/upi
+UPI gateway payment notifications
+HMAC-SHA256 header
+POST
+/webhooks/whatsapp
+WhatsApp message events (Twilio)
+Twilio signature
+POST
+/webhooks/slack
+Slack interaction payloads
+Slack signing secret
+GET
+/webhooks/health
+Webhook endpoint health check
+None
+SECTION 07  
+AI AGENT ARCHITECTURE (ANTIGRAVITY)
+7. AI Agent Architecture
+SpendOS is built and maintained using Antigravity's multi-agent workflow. Each agent is a specialised Claude instance with defined responsibilities, tool access, and handoff protocols. Agents communicate via structured output contracts and a shared task queue.
+7.1 Agent Roster
+Agent
+Role
+Primary Output
+Triggers
+Product Manager Agent
+Requirements + prioritisation
+Updated PRD, sprint plan
+New feature request, market change
+Business Analyst Agent
+Spec refinement + acceptance criteria
+User stories, test cases
+PRD update, stakeholder feedback
+UX Research Agent
+User insight synthesis
+Persona updates, usability findings
+User interviews, NPS dip
+UI Designer Agent
+Screen design + component spec
+Figma spec, component library updates
+New screen requirement
+Frontend Architect Agent
+Frontend tech decisions + code
+Component code, PR reviews
+New feature build, tech debt
+Backend Architect Agent
+Service design + implementation
+Service code, API contracts
+New endpoint requirement
+Database Architect Agent
+Schema design + migrations
+Migration files, ER diagram updates
+New entity, schema change
+API Architect Agent
+API contract design + docs
+OpenAPI YAML, Postman collection
+New endpoint, breaking change
+Security Engineer Agent
+Security review + threat model
+Security report, hardened code
+Pre-release, incident
+DevOps Engineer Agent
+Infrastructure + CI/CD
+Terraform configs, pipeline YAML
+New service, scale event
+QA Engineer Agent
+Test strategy + execution
+Test suites, bug reports
+Feature complete, regression
+Performance Engineer Agent
+Load testing + optimization
+Performance report, bottleneck fixes
+Pre-release, slow query alert
+AI Engineer Agent
+OCR + classification models
+Model updates, accuracy reports
+Accuracy below threshold
+Integration Engineer Agent
+Third-party API integrations
+Integration code, webhook handlers
+New partner, API change
+Documentation Agent
+Developer + user docs
+Updated docs, changelog
+Feature release, API change
+Release Manager Agent
+Release coordination
+Release notes, deployment checklist
+Sprint end, hotfix
+Monitoring Agent
+Observability + alerting
+Alert rules, incident reports
+New service, SLA breach
+Support Agent
+Customer issue triage
+Ticket resolution, known-issue docs
+Support ticket, user complaint
+GST Intelligence Agent
+GST compliance automation
+GSTIN enrichment, ITC reports
+GST period close, new vendor
+Fraud Detection Agent
+Anomaly detection + risk scoring
+Risk scores, blocked transactions
+Unusual spend pattern
+7.2 Agent Definitions & System Prompts
+Agent: Backend Architect Agent
+Agent Definition
+Purpose: Design and implement production-grade backend services for SpendOS
+Tools Access: GitHub (read/write), PostgreSQL (read schema), Postman, AWS console (read-only)
+Memory: Full PRD, TRD, current API spec, database schema, service contracts
+Success Criteria: Services pass integration tests; P95 API latency < 300ms; zero security vulnerabilities in SAST scan
+System Prompt
+You are the Backend Architect Agent for SpendOS, a UPI-native corporate spend
+management platform for Indian startups.
+CONTEXT: SpendOS handles real financial transactions. Every decision must
+prioritise: (1) correctness over speed, (2) idempotency on all mutations,
+(3) explicit error handling — never swallow exceptions, (4) audit trails
+on all financial state changes.
+STACK: Node.js 20 + TypeScript + Fastify + Prisma + PostgreSQL 16 +
+Redis 7 + BullMQ + AWS S3. No ORMs other than Prisma.
+RULES:
+- All monetary amounts in paise (integer), never floats
+- All financial mutations wrapped in database transactions
+- All endpoints require idempotency-key header for POST/PUT/PATCH
+- Validate inputs with Zod schemas before any business logic
+- Return RFC 7807 Problem Detail format for all errors
+- Log: request_id, user_id, company_id, action, result for every mutation
+- Never store raw PAN, Aadhaar, or bank account numbers — encrypt or tokenise
+When given a task, output: (1) design rationale, (2) TypeScript code,
+(3) Prisma schema additions if needed, (4) test cases, (5) deployment notes.
+Agent: Security Engineer Agent
+System Prompt
+You are the Security Engineer Agent for SpendOS, a financial platform handling
+real money for Indian companies.
+MANDATE: Zero tolerance for: (1) SQL injection, (2) authentication bypass,
+(3) plaintext PII storage, (4) missing rate limits on auth endpoints,
+(5) IDOR vulnerabilities, (6) missing idempotency on financial mutations.
+ALWAYS CHECK: OWASP Top 10, RBI PPI security guidelines, DPDP Act 2023
+compliance. Run SAST analysis on every PR. Flag severity as:
+CRITICAL (block merge), HIGH (fix before release), MEDIUM (fix in sprint),
+LOW (log and schedule).
+For every code review output: threat model, vulnerabilities found with CVSS
+score, remediation code, and verification steps.
+Agent: QA Engineer Agent
+System Prompt
+You are the QA Engineer Agent for SpendOS. Your job is to break things
+before users do.
+FOR EVERY FEATURE: Generate (1) happy-path test cases, (2) edge cases,
+(3) negative test cases, (4) race condition tests for financial operations,
+(5) idempotency tests (same request twice = same result).
+FINANCIAL TESTS ALWAYS INCLUDE:
+- Double-spend attempt (concurrent requests with same idempotency key)
+- Insufficient balance scenario
+- Wallet frozen during transaction in-flight
+- Policy change during payment approval window
+- Webhook received before payment confirmation
+Output: Playwright test code (E2E), Jest test code (unit/integration),
+k6 script (load testing), and test coverage report.
+Agent: GST Intelligence Agent
+System Prompt
+You are the GST Intelligence Agent for SpendOS, specialising in Indian
+Goods & Services Tax compliance for corporate expense management.
+RESPONSIBILITIES:
+- Validate GSTIN format (15-character alphanumeric per GST Council spec)
+- Match input tax credit (ITC) from transactions against GSTR-2A filings
+- Flag transactions with missing or invalid GST invoices
+- Generate GSTR-ready expense summaries
+- Identify reverse charge mechanism (RCM) scenarios
+RULES: Never store GSTIN without validation. Always check: GSTIN structure,
+state code (first 2 digits), PAN embedded (chars 3-12), entity code (char 13),
+check digit (char 15). Use GST Portal API for live validation.
+Output: Validated GSTIN, tax breakdown (CGST/SGST/IGST), ITC eligibility,
+missing invoice alerts, period-wise reconciliation report.
+SECTION 08  
+ANTIGRAVITY SKILLS LIBRARY
+8. Antigravity Skills Library
+8.1 Core Skills
+Skill Name
+Trigger Conditions
+Input
+Output
+PRD Generation
+New product feature requested
+Feature description, user need, business goal
+Structured PRD section: stories, acceptance criteria, risks
+API Design
+New endpoint or resource needed
+Resource name, operations, auth requirements
+OpenAPI YAML spec, Zod validation schemas, example curl commands
+Schema Design
+New entity or data model needed
+Entity description, relationships, query patterns
+Prisma schema, migration SQL, index recommendations, ER diagram
+UI Review
+New screen or component built
+Figma link or component code
+Accessibility audit, UX friction points, consistency issues, WCAG rating
+Code Review
+PR opened on GitHub
+PR diff, context from PRD/TRD
+Line-by-line review: security, perf, correctness, style
+Security Audit
+Pre-release or incident
+Service code, API spec, infrastructure config
+OWASP audit, CVSS-scored findings, remediation code
+Test Generation
+Feature marked as complete
+Feature spec, API contract, acceptance criteria
+Unit tests (Jest), E2E tests (Playwright), load test (k6)
+Performance Audit
+P95 latency alert or pre-release
+Slow query logs, APM trace, load test results
+Bottleneck analysis, index recommendations, caching strategy
+Deployment Skill
+Release approved by Release Manager Agent
+Docker images, Terraform plan, runbook
+Deployment commands, rollback plan, smoke test checklist
+Incident Response
+PagerDuty alert fires
+Alert details, recent deployments, error logs
+Root cause analysis, immediate mitigation, post-mortem template
+GST Reconciliation
+Month-end or on demand
+Transaction export, GSTR-2A data
+ITC report, missing invoices list, reconciliation summary
+Fraud Detection Audit
+Unusual spend pattern detected
+Transaction cluster, user behaviour data
+Risk score, fraud signal explanation, block/flag recommendation
+8.2 Skill Detail: API Design Skill
+Execution Steps
+Parse input: resource name, list of required operations (CRUD), auth level, rate limit requirements
+Design RESTful route structure following SpendOS conventions (plural nouns, nested for relationships)
+Define request schema: required/optional fields, types, validation rules
+Define response schema: success body, pagination (cursor-based), metadata
+Define error responses: map to RFC 7807 Problem Detail format with error codes
+Generate OpenAPI 3.1 YAML block
+Generate Zod validation schemas for TypeScript backend
+Generate example curl commands for each operation
+Validate against existing API patterns for consistency
+Output: YAML spec block + TypeScript Zod schemas + curl examples
+Validation Rules
+Routes must use kebab-case; resource names plural
+All authenticated endpoints must declare Bearer token requirement
+All POST/PUT/PATCH must include idempotency-key in header spec
+Amount fields must be typed as integer (paise), never float
+Pagination must use cursor-based (not offset) for high-volume endpoints
+SECTION 09  
+DEVELOPMENT ROADMAP
+9. Development Roadmap
+9.1 Phase 1: Foundation (Months 1–4)
+Deliverables
+Company onboarding flow (sign-up, KYC, GST registration)
+User management with RBAC (5 roles)
+Manual expense submission (receipt upload, OCR processing)
+Rule-based approval workflows (in-app + email)
+Finance dashboard (30-day transaction view, basic analytics)
+GST report (manual period, PDF export)
+Zoho Books integration (one-way export)
+WhatsApp approval bot (MVP)
+Mobile app (React Native, iOS + Android)
+Team Requirements
+2x Full-stack engineers (Node.js + React Native)
+1x Frontend engineer (Next.js dashboard)
+1x Product Manager
+1x Designer (UX + UI)
+Part-time: DevOps, QA, Legal (RBI/GST compliance)
+Timeline: 16 weeks | Budget: ₹1.5 Cr seed
+Phase 1 Risks
+RBI PPI licence not required (SaaS-only, no actual wallet) — de-risked
+OCR accuracy below 80% for low-quality receipts — mitigation: human review fallback
+9.2 Phase 2: Core Features (Months 5–9)
+Deliverables
+UPI spend wallets (company + employee, via banking partner API)
+Direct UPI payment from company wallet (QR scan, UPI ID)
+Budget enforcement and policy engine (real-time limit checks)
+Wallet freeze/unfreeze (admin control)
+Slack approval integration
+Tally integration (XML bridge)
+Advanced analytics dashboard (ClickHouse-backed)
+Automated GSTIN validation and GSTR-2A matching
+Virtual department wallets with allocation controls
+Team Additions
+1x Backend engineer (payments specialist)
+1x Data engineer (ClickHouse + analytics)
+1x ML engineer (OCR accuracy improvements)
+Timeline: 20 weeks | External Dependency: Banking partner API access (RazorpayX or similar)
+9.3 Phase 3: Advanced Features (Months 10–15)
+Deliverables
+Virtual corporate cards (Visa/Mastercard via card issuing partner)
+Subscription card management (SaaS spend, ad spend dedicated cards)
+Merchant intelligence layer (category benchmarks, vendor analytics)
+Procurement marketplace (preferred vendor discounts)
+Enterprise SSO (SAML 2.0 / OIDC)
+Multi-entity support (group companies)
+Advanced fraud detection (ML-based anomaly scoring)
+QuickBooks and SAP Basic integration
+Timeline: 24 weeks | Key Dependency: Card issuing licence or partner agreement
+9.4 Phase 4: Scale & Optimization (Months 16–24)
+Deliverables
+Working capital credit lines (NBFC partnership or own lending book)
+Invoice financing (upload invoice → get advance)
+Treasury management (idle float yield optimisation)
+Accounts payable automation (vendor payment scheduling, approval)
+Microservices migration (split monolith into independent services at scale)
+International expansion readiness (multi-currency, UAE/SEA markets)
+Phase
+Timeline
+Team Size
+Budget Estimate
+Revenue Target
+Phase 1 — Foundation
+Months 1–4
+5–7 people
+₹1.5 Cr
+₹0 (pre-revenue)
+Phase 2 — Core Features
+Months 5–9
+8–10 people
+₹2 Cr
+₹50L ARR
+Phase 3 — Advanced
+Months 10–15
+12–15 people
+₹3.5 Cr
+₹2.5 Cr ARR
+Phase 4 — Scale
+Months 16–24
+20–25 people
+₹6 Cr
+₹10 Cr ARR
+SECTION 10  
+ENGINEERING STANDARDS
+10. Engineering Standards
+10.1 Coding Standards
+Language: TypeScript strict mode (no implicit any, noUncheckedIndexedAccess enabled)
+Style: ESLint + Prettier (tabs=2, semicolons, single quotes)
+Naming: camelCase for variables/functions, PascalCase for classes/types, SCREAMING_SNAKE for constants
+Functions: max 40 lines; single responsibility; pure where possible
+Error handling: always explicit; never throw generic Error() — use typed error classes
+Logging: structured JSON via pino logger; always include request_id, company_id, user_id
+Comments: document 'why' not 'what'; JSDoc on all public service methods
+Financial amounts: ALWAYS integers in paise; never use floating point for money
+10.2 API Standards
+REST conventions: plural nouns, nested for ownership (/companies/:id/wallets)
+Versioning: URL-based (/v1/); breaking changes require new major version
+Error format: RFC 7807 Problem Detail (type, title, status, detail, instance)
+Pagination: cursor-based using created_at + id composite cursor
+Idempotency: Idempotency-Key header required on all POST/PUT/PATCH endpoints
+Dates: ISO 8601 with timezone (2025-05-15T10:30:00+05:30)
+Monetary values: integers in paise; include currency field always
+10.3 Git Workflow
+Branching strategy: GitHub Flow (main + short-lived feature branches)
+Branch naming: feature/SPEND-123-wallet-freeze, fix/SPEND-456-duplicate-txn, hotfix/SPEND-789-auth-bypass
+Commit messages: Conventional Commits (feat:, fix:, chore:, docs:, test:, refactor:)
+PR requirements: all CI checks green, 2 approvals (1 must be senior engineer), no 'requested changes' outstanding
+PR size: max 400 lines changed; split larger PRs
+Main branch: protected; direct push forbidden; squash merge only
+Release tags: semantic versioning v1.2.3; CHANGELOG.md maintained
+10.4 Security Standards
+OWASP Top 10 checklist before every release
+Dependency scanning: npm audit + Snyk in CI pipeline; no HIGH or CRITICAL unaddressed
+Secrets: AWS Secrets Manager only; no secrets in code, .env files, or CI variables in plain text
+Input validation: Zod schema validation on ALL external inputs before business logic
+SQL injection prevention: Prisma parameterised queries only; raw SQL prohibited
+Rate limiting: all public endpoints; authentication endpoints have strict limits
+Logging: never log PAN, Aadhaar, full bank account, full card number, or password hash
+10.5 Database Standards
+All tables have: id (UUID), company_id (FK, multi-tenant), created_at, updated_at
+Soft delete: deleted_at TIMESTAMPTZ NULLABLE (not hard deletes for financial data)
+All migrations: forward-only; no destructive migrations without 3-sprint deprecation period
+Indexes: all FK columns indexed; composite indexes for common query patterns
+Transactions: all financial mutations (debit + ledger entry) in a single DB transaction
+No stored procedures; business logic in application layer only
+SECTION 11  
+TESTING STRATEGY
+11. Testing Strategy
+11.1 Testing Pyramid
+Layer
+Tool
+Coverage Target
+Focus
+Unit Tests
+Jest + ts-jest
+>80% line coverage
+Service layer, business rules, utility functions
+Integration Tests
+Jest + Testcontainers
+>70% endpoint coverage
+API endpoints with real DB (Postgres container)
+Contract Tests
+Pact.io
+All public API consumers
+API backward compatibility between services
+E2E Tests
+Playwright
+Critical user journeys (10 flows)
+Full flows: onboard → spend → approve → report
+Load Tests
+k6
+P95 < 300ms at 1000 RPS
+Payment initiation, dashboard, approval endpoints
+Security Tests
+OWASP ZAP + Burp Suite
+OWASP Top 10 + SANS 25
+Auth, IDOR, injection, rate limiting
+Chaos Tests
+LitmusChaos
+Database failover, pod crash, network partition
+Resilience under infrastructure failure
+11.2 Critical Financial Test Cases
+TC-FIN-01: Double Spend Prevention
+Scenario: Two concurrent requests with same idempotency key for same amount
+Expected: Second request returns 200 with cached first response; balance debited exactly once
+Implementation: Redis atomic SET NX with idempotency key TTL of 24 hours
+TC-FIN-02: Wallet Freeze During In-Flight Transaction
+Scenario: Admin freezes wallet while a UPI payment is in 'pending' status
+Expected: Pending payment completes (cannot be reversed mid-flight); subsequent payments blocked
+TC-FIN-03: Policy Change During Approval Window
+Scenario: Spend limit reduced from ₹5,000 to ₹1,000 while an approval for ₹3,000 is pending
+Expected: Approval evaluation uses policy at time of transaction initiation; alert finance manager
+TC-FIN-04: Concurrent Balance Debit
+Scenario: 10 concurrent requests to debit ₹10,000 each from a wallet with ₹50,000 balance
+Expected: Exactly 5 succeed; 5 fail with InsufficientFundsError; balance = ₹0
+Implementation: Optimistic locking via version column or SELECT FOR UPDATE
+11.3 UAT Strategy
+Alpha users: 5 friendly startups (existing network) recruited 6 weeks before Phase 1 launch
+UAT scenarios: Based directly on acceptance criteria in PRD Section 1.10
+UAT checklist: Onboarding time < 30 min, expense submission < 60s, WhatsApp approval works on all major Android/iOS versions
+Bug severity SLA: P0 (blocker) fixed same day; P1 fixed in 24 hours; P2 in 3 days
+Sign-off: Finance manager + founder at each alpha company must sign UAT approval
+SECTION 12  
+DEPLOYMENT STRATEGY
+12. Deployment Strategy
+12.1 Environment Strategy
+Environment
+Purpose
+Data
+Access
+Development (local)
+Individual developer feature work
+Seed data (synthetic)
+Developer only
+CI
+Automated test execution per PR
+Fresh DB per run (Testcontainers)
+GitHub Actions only
+Staging
+Pre-production testing; UAT; QA
+Anonymised production clone (weekly refresh)
+Engineering + QA + CS
+Production
+Live platform
+Real data — PII encrypted
+Automated deploy + on-call engineers only
+12.2 Production Deployment Process
+Release Manager Agent reviews release candidate: all tests green, no CRITICAL security findings, changelog updated
+Database migrations run first (backward-compatible only — never break existing code)
+Blue-green deployment: new version deployed to green environment; traffic shifted 10% → 50% → 100% over 30 minutes
+Automated smoke tests after each traffic shift gate (payment initiation, dashboard load, approval webhook)
+Monitoring: error rate and P95 latency dashboards watched for 30 minutes post-full deployment
+Rollback trigger: automated if error rate > 2% or P95 > 500ms; manual rollback always available within 5 minutes
+12.3 Disaster Recovery
+Scenario
+RTO
+RPO
+Recovery Procedure
+API server crash (single pod)
+< 30 seconds
+0 (stateless)
+Kubernetes auto-restarts; HPA adds capacity
+Database primary failure
+< 5 minutes
+< 1 minute (WAL archiving)
+RDS Multi-AZ automatic failover to standby
+Redis cache failure
+< 2 minutes
+N/A (cache is warm-cold)
+Failover to replica; cold start with DB reads
+Full AZ outage
+< 30 minutes
+< 5 minutes
+Route 53 health check fails over to backup AZ
+Data corruption incident
+< 2 hours
+< 1 hour
+Restore from point-in-time backup; replay audit log
+Security breach
+< 4 hours
+< 1 hour
+Isolate affected services; rotate all secrets; notify RBI if financial data involved
+12.4 Compliance & Regulatory Deployment Notes
+All deployments to production require a security scan report (Trivy for containers, npm audit for dependencies)
+Financial data migrations require dual sign-off (Engineering Lead + CFO/Founder)
+Audit logs of all production deployments retained for 7 years (RBI requirement for PPI licence later)
+Change management: all production changes documented 24 hours in advance except P0 hotfixes
+Data residency: all production data stored in AWS ap-south-1 (Mumbai) region; no cross-border transfer without consent
+— END OF DOCUMENT —
+SpendOS Master Product & Engineering Document  |  Version 1.0  |  Confidential

@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+build/
+.next/
+out/
+.turbo/
+
+# Environment / secrets (never commit real secrets)
+.env
+.env.*
+!.env.example
+
+# gstack artifacts (local only — security reports, checkpoints)
+.gstack/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage/
+
+# Prisma local
+*.db
+*.sqlite
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
