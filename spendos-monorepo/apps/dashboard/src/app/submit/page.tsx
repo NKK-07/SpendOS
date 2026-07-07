@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useAuth, useApi } from '@/lib/auth';
+import { uploadExpenseDocument } from '@/lib/upload';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -107,25 +108,7 @@ export default function SubmitExpensePage() {
         let completed = 0;
         const uploadPromises = files.map(async (f) => {
           try {
-            const urlRes = await api(`/expenses/${expense.id}/upload-url?filename=${encodeURIComponent(f.name)}&contentType=${encodeURIComponent(f.type)}`);
-            if (!urlRes.ok) throw new Error(`Failed to get upload URL for ${f.name}`);
-            const { uploadUrl, s3Key } = await urlRes.json();
-            
-            const s3Res = await fetch(uploadUrl, {
-              method: 'PUT',
-              headers: { 'Content-Type': f.type },
-              body: f.file,
-            });
-            if (!s3Res.ok) throw new Error(`Failed to upload ${f.name}`);
-            
-            const confirmRes = await api(`/expenses/${expense.id}/confirm-upload`, {
-              method: 'POST',
-              body: JSON.stringify({
-                s3Key, fileName: f.name, fileType: f.type, fileSize: f.size, docType: 'original',
-              })
-            });
-            if (!confirmRes.ok) throw new Error(`Failed to confirm upload for ${f.name}`);
-            
+            await uploadExpenseDocument(api, expense.id, f.file, 'original');
             completed++;
             setUploadProgress(Math.round((completed / files.length) * 100));
           } catch (err: any) {
