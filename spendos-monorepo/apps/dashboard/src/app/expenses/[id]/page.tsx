@@ -210,8 +210,12 @@ export default function ExpenseDetailPage() {
                       <span className="text-[var(--danger)]">Failed Validation</span>
                     ) : expense.gst_status === 'pending' ? (
                       <span className="text-[var(--amber)]">Pending</span>
-                    ) : (
+                    ) : expense.gst_status === 'verified' ? (
                       <span className="text-[var(--signal)]">GSTIN Verified</span>
+                    ) : (
+                      // Never render a green "Verified" for a missing/unknown status —
+                      // no real GST verification runs yet, so that was a fake signal.
+                      <span className="text-[var(--text-muted)]">Not verified</span>
                     )}
                   </dd>
                 </div>
