@@ -77,7 +77,7 @@ export default function ReviewQueuePage() {
 
   const requestProofMutation = useMutation({
     mutationFn: async ({ id, proofType, note }: { id: string; proofType: string; note: string }) => {
-      const res = await api(`/expenses/${id}/request-proof`, { method: 'POST', body: JSON.stringify({ reason: `[${proofType}] ${note}` }) });
+      const res = await api(`/expenses/${id}/request-proof`, { method: 'POST', body: JSON.stringify({ note: `[${proofType}] ${note}` }) });
       if (!res.ok) throw new Error('Request failed');
       return res.json();
     },

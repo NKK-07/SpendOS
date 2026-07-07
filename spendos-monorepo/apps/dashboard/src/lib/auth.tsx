@@ -178,7 +178,11 @@ export async function authFetch(
   const csrfToken = await getCsrfToken();
   headers.set('csrf-token', csrfToken);
 
-  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+  // Only declare a JSON body when there actually is one. A POST with
+  // Content-Type: application/json but an empty body makes Fastify reject it
+  // with FST_ERR_CTP_EMPTY_JSON_BODY (500) — which broke every bodyless
+  // mutation (approve, mark-all-notifications-read, etc.).
+  if (options.body && !headers.has('Content-Type') && !(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
 

@@ -283,11 +283,14 @@ export default function LedgerPage() {
       setLoading(true);
       try {
         const url = cursor ? `/ledger?cursor=${cursor}` : '/ledger';
-        const data: any = await api(url);
+        const res = await api(url);
+        // api() returns a Response — must parse the JSON body (this was the bug:
+        // treating the Response as the payload left the ledger permanently empty).
+        const data: any = await res.json();
         const newEntries: LedgerEntry[] = Array.isArray(data?.data) ? data.data : (Array.isArray(data?.entries) ? data.entries : (Array.isArray(data) ? data : []));
         setEntries((prev) => (cursor ? [...(Array.isArray(prev) ? prev : []), ...newEntries] : newEntries));
-        setNextCursor(data?.next_cursor ?? null);
-        setHasMore(!!data?.next_cursor);
+        setNextCursor(data?.meta?.nextCursor ?? null);
+        setHasMore(!!data?.meta?.hasMore);
       } catch {
         // Silent — empty state renders
       } finally {

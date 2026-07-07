@@ -448,20 +448,32 @@ export class ExpensesService {
         await tx.ticket.updateMany({ where: { expense_id: id, status: "open" }, data: { status: "resolved", resolution_type: "marked_paid", resolved_at: new Date() } });
 
         const corpExpense = await tx.account.findFirstOrThrow({ where: { company_id: actor.companyId, name: "Corporate Expense" } });
-        const treasury = await tx.account.findFirstOrThrow({ where: { company_id: actor.companyId, name: "Corporate Treasury" } });
-        
-        await createJournalGroupWithTx(tx, {
-          companyId: actor.companyId,
-          actorId: actor.userId,
-          transactionType: TransactionType.EXPENSE_REIMBURSEMENT,
-          description: `Reimbursement for Expense ${lockedExpense.id}`,
-          transactionId: lockedExpense.id,
-          idempotencyKey: `reimburse-ledger-${lockedExpense.id}`,
-          entries: [
-            { accountId: corpExpense.id, amountPaise: BigInt(lockedExpense.amount_paise), entryType: EntryType.DEBIT },
-            { accountId: treasury.id, amountPaise: BigInt(lockedExpense.amount_paise), entryType: EntryType.CREDIT },
-          ],
-        });
+        // Reimbursements are disbursed from the Nodal Payout Account — the account
+        // funded with the company's float at signup. The Corporate Treasury is never
+        // funded, so crediting it here always drove it negative and tripped the
+        // ledger's asset-negative guard, 500'ing every mark-paid.
+        const payoutAccount = await tx.account.findFirstOrThrow({ where: { company_id: actor.companyId, name: "Nodal Payout Account" } });
+
+        try {
+          await createJournalGroupWithTx(tx, {
+            companyId: actor.companyId,
+            actorId: actor.userId,
+            transactionType: TransactionType.EXPENSE_REIMBURSEMENT,
+            description: `Reimbursement for Expense ${lockedExpense.id}`,
+            transactionId: lockedExpense.id,
+            idempotencyKey: `reimburse-ledger-${lockedExpense.id}`,
+            entries: [
+              { accountId: corpExpense.id, amountPaise: BigInt(lockedExpense.amount_paise), entryType: EntryType.DEBIT },
+              { accountId: payoutAccount.id, amountPaise: BigInt(lockedExpense.amount_paise), entryType: EntryType.CREDIT },
+            ],
+          });
+        } catch (err: any) {
+          // Surface a genuine float depletion as a clean 400 instead of a 500.
+          if (err?.message?.includes("Insufficient funds")) {
+            throw new BadRequestError("Payout account has insufficient funds to reimburse this expense.");
+          }
+          throw err;
+        }
 
         await tx.outboxEvent.create({
           data: {

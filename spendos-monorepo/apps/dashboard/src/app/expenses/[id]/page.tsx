@@ -12,6 +12,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { MonoHash } from '@/components/ui/MonoHash';
 import { ChevronLeft, FileText, CheckCircle2, XCircle, AlertCircle, FileUp, CreditCard } from 'lucide-react';
 import { ReasonModal } from '@/components/ReasonModal';
+import { uploadExpenseDocument } from '@/lib/upload';
 
 export default function ExpenseDetailPage() {
   const params = useParams();
@@ -23,6 +24,9 @@ export default function ExpenseDetailPage() {
 
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectInput, setShowRejectInput] = useState(false);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const [proofError, setProofError] = useState('');
 
   const { data: expense, isLoading } = useQuery({
     queryKey: ['expenses', id, user?.userId],
@@ -77,6 +81,37 @@ export default function ExpenseDetailPage() {
 
   const isPending = ['submitted', 'proof_submitted'].includes(expense.status);
   const canReview = user?.role && isReviewer(user.role) && isPending;
+  const isSubmitter = expense.submitted_by === user?.userId;
+  const awaitingProof = isSubmitter && expense.status === 'proof_requested';
+
+  const handleUploadProof = async () => {
+    if (!proofFile) return;
+    setUploadingProof(true);
+    setProofError('');
+    try {
+      await uploadExpenseDocument(api, id, proofFile, 'proof');
+      setProofFile(null);
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+    } catch (err: any) {
+      setProofError(err.message || 'Upload failed');
+    } finally {
+      setUploadingProof(false);
+    }
+  };
+
+  // The download endpoint returns { downloadUrl } JSON behind cookie auth, so we
+  // must fetch through the authenticated api() and then open the resolved URL —
+  // a plain <a href> would 401.
+  const viewDocument = async (docId: string) => {
+    try {
+      const res = await api(`/documents/${docId}/download`);
+      if (!res.ok) throw new Error('Could not open document');
+      const { downloadUrl } = await res.json();
+      window.open(downloadUrl, '_blank', 'noopener');
+    } catch (err: any) {
+      alert(err.message || 'Could not open document');
+    }
+  };
 
   return (
     <LazyMotion features={domAnimation}>
@@ -114,6 +149,36 @@ export default function ExpenseDetailPage() {
           )}
         </header>
 
+        {awaitingProof && (
+          <GlassCard className="p-6 border border-[var(--amber)]/30 bg-[var(--amber)]/[0.04]">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertCircle size={20} className="text-[var(--amber)] shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-sans text-sm font-semibold text-[var(--text-primary)]">Proof requested</h3>
+                <p className="font-mono text-xs text-[var(--text-secondary)] mt-1">
+                  {expense.proof_requested_note || 'A reviewer has asked for supporting documentation for this expense.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/heic,application/pdf"
+                onChange={(e) => { setProofFile(e.target.files?.[0] || null); setProofError(''); }}
+                className="text-xs text-[var(--text-secondary)] file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-white/10 file:text-[var(--text-primary)] file:font-mono file:text-[10px] file:uppercase file:cursor-pointer"
+              />
+              <button
+                onClick={handleUploadProof}
+                disabled={!proofFile || uploadingProof}
+                className="px-5 py-2.5 rounded-lg bg-[var(--amber)] hover:brightness-110 text-black font-mono text-xs font-bold uppercase transition-all disabled:opacity-40"
+              >
+                {uploadingProof ? 'Uploading...' : 'Upload proof'}
+              </button>
+            </div>
+            {proofError && <p className="font-mono text-[10px] text-[var(--danger)] mt-3">{proofError}</p>}
+          </GlassCard>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
             <GlassCard className="p-6">
@@ -145,8 +210,12 @@ export default function ExpenseDetailPage() {
                       <span className="text-[var(--danger)]">Failed Validation</span>
                     ) : expense.gst_status === 'pending' ? (
                       <span className="text-[var(--amber)]">Pending</span>
-                    ) : (
+                    ) : expense.gst_status === 'verified' ? (
                       <span className="text-[var(--signal)]">GSTIN Verified</span>
+                    ) : (
+                      // Never render a green "Verified" for a missing/unknown status —
+                      // no real GST verification runs yet, so that was a fake signal.
+                      <span className="text-[var(--text-muted)]">Not verified</span>
                     )}
                   </dd>
                 </div>
@@ -162,25 +231,34 @@ export default function ExpenseDetailPage() {
                 <h3 className="font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest">Receipt Documentation</h3>
               </div>
               
-              {expense.receipt_url ? (
-                <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.06] rounded-xl group hover:bg-white/[0.04] transition-colors cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-[var(--indigo)]/10 flex items-center justify-center text-[var(--indigo)]">
-                      <FileText size={20} />
+              {expense.documents && expense.documents.length > 0 ? (
+                <div className="space-y-3">
+                  {expense.documents.map((doc: any) => (
+                    <div key={doc.id} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.06] rounded-xl group hover:bg-white/[0.04] transition-colors">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded bg-[var(--indigo)]/10 flex items-center justify-center text-[var(--indigo)] shrink-0">
+                          <FileText size={20} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-sans text-sm text-[var(--text-primary)] truncate">{doc.file_name || 'Document'}</p>
+                          <span className={`inline-block mt-1 font-mono text-[10px] uppercase px-1.5 py-0.5 rounded ${doc.document_type === 'proof' ? 'bg-[var(--amber)]/15 text-[var(--amber)]' : 'bg-white/10 text-[var(--text-muted)]'}`}>
+                            {doc.document_type === 'proof' ? 'Proof' : 'Original'}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => viewDocument(doc.id)}
+                        className="text-[var(--indigo)] shrink-0 ml-3 px-3 py-1.5 bg-[var(--indigo)]/10 rounded-lg font-mono text-[10px] uppercase hover:bg-[var(--indigo)]/20 transition-colors"
+                      >
+                        View
+                      </button>
                     </div>
-                    <div>
-                      <p className="font-sans text-sm text-[var(--text-primary)]">Receipt Document</p>
-                      <p className="font-mono text-[10px] text-[var(--text-muted)]">Stored in S3</p>
-                    </div>
-                  </div>
-                  <a href={expense.receipt_url && /^https?:\/\//i.test(expense.receipt_url) ? expense.receipt_url : '#'} target="_blank" rel="noreferrer" className="text-[var(--indigo)] opacity-0 group-hover:opacity-100 transition-opacity p-2 bg-[var(--indigo)]/10 rounded-lg" onClick={(e) => { if (!expense.receipt_url || !/^https?:\/\//i.test(expense.receipt_url)) { e.preventDefault(); alert('Security: Unsafe URL blocked'); } }}>
-                    View
-                  </a>
+                  ))}
                 </div>
               ) : (
                 <div className="py-8 text-center bg-white/[0.02] border border-white/[0.06] border-dashed rounded-xl">
                   <FileUp size={24} className="text-[var(--text-muted)] mx-auto mb-3" />
-                  <p className="font-mono text-xs text-[var(--text-secondary)]">No receipt attached</p>
+                  <p className="font-mono text-xs text-[var(--text-secondary)]">No documents attached</p>
                 </div>
               )}
             </GlassCard>
