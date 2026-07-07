@@ -4,8 +4,12 @@ import { CheckCircle2, Circle } from 'lucide-react';
 export function OnboardingOverlay({ hasExpenses, hasTeam, onDismiss }: {
   hasExpenses: boolean; hasTeam: boolean; onDismiss: () => void;
 }) {
+  // When every step is done, just render nothing. Do NOT call onDismiss() here —
+  // that setStates the parent during this component's render ("Cannot update a
+  // component while rendering a different component"). onDismiss is for the
+  // explicit × button only.
   const allDone = hasExpenses && hasTeam;
-  if (allDone) { onDismiss(); return null; }
+  if (allDone) return null;
 
   return (
     <div className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 mb-6 border border-slate-700/50">
