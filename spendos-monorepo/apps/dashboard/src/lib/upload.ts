@@ -19,14 +19,20 @@ export async function uploadExpenseDocument(
   }
   const { uploadUrl, s3Key } = await urlRes.json();
 
-  // PUT goes straight to the (pre-signed) storage URL — not through the API,
-  // so no auth/CSRF headers here.
+  // PUT goes straight to the storage URL. In dev this is the API's local-S3
+  // route on a different origin (:3000) than the dashboard (:3002), and it
+  // authenticates via the httpOnly accessToken cookie — so credentials MUST be
+  // included or the cross-origin PUT arrives without the cookie and 401s. (Real
+  // S3 pre-signed URLs ignore credentials, so this is safe in production too.)
   const putRes = await fetch(uploadUrl, {
     method: 'PUT',
     headers: { 'Content-Type': file.type },
     body: file,
+    credentials: 'include',
   });
-  if (!putRes.ok) throw new Error(`Failed to upload ${file.name}`);
+  if (!putRes.ok) {
+    throw new Error(`Failed to upload ${file.name} (storage returned ${putRes.status})`);
+  }
 
   const confirmRes = await api(`/expenses/${expenseId}/confirm-upload`, {
     method: 'POST',
